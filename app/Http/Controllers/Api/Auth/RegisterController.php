@@ -25,7 +25,7 @@ class RegisterController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->select = ['id', 'name', 'email', 'otp', 'avatar', 'otp_verified_at', 'last_activity_at'];
+        $this->select = ['id', 'name', 'email', 'otp', 'avatar',];
     }
 
     public function register(Request $request)
@@ -37,7 +37,7 @@ class RegisterController extends Controller
         try {
             DB::beginTransaction();
             do {
-                $slug = "user_".rand(1000000000, 9999999999);
+                $slug = "user_" . rand(1000000000, 9999999999);
             } while (User::where('slug', $slug)->exists());
 
             $user = User::create([
@@ -65,9 +65,9 @@ class RegisterController extends Controller
             ];
 
             $admins = User::role('admin', 'web')->get();
-            foreach($admins as $admin){
+            foreach ($admins as $admin) {
                 $admin->notify(new RegistrationNotification($notiData));
-                if(config('settings.reverb')  === 'on'){
+                if (config('settings.reverb')  === 'on') {
                     broadcast(new RegistrationNotificationEvent($notiData, $admin->id))->toOthers();
                 }
             }
@@ -89,11 +89,9 @@ class RegisterController extends Controller
                 'message'    => 'User register in successfully.',
                 'code'       => 200,
                 'token_type' => 'bearer',
-                'token'      => $token,
                 'expires_in' => auth('api')->factory()->getTTL() * 60,
                 'data' => $data
             ], 200);
-
         } catch (Exception $e) {
             DB::rollBack();
             return Helper::jsonErrorResponse('User registration failed', 500, [$e->getMessage()]);
@@ -107,6 +105,8 @@ class RegisterController extends Controller
         ]);
         try {
             $user = User::where('email', $request->input('email'))->first();
+
+            $token = auth('api')->login($user);
 
             //! Check if email has already been verified
             if (!empty($user->otp_verified_at)) {
@@ -128,7 +128,14 @@ class RegisterController extends Controller
             $user->otp_expires_at    = null;
             $user->save();
 
-            return Helper::jsonResponse(true, 'Email verification successful.', 200);
+      return response()->json([
+                'status'     => true,
+                'message'    => 'Email verification successful',
+                'code'       => 200,
+                'token_type' => 'bearer',
+                'expires_in' => auth('api')->factory()->getTTL() * 60,
+                'token' =>  $token
+            ], 200);
         } catch (Exception $e) {
             return Helper::jsonErrorResponse($e->getMessage(), $e->getCode());
         }
