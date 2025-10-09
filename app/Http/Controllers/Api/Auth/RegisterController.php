@@ -47,21 +47,19 @@ class RegisterController extends Controller
         $email = strtolower($request->input('email'));
         $userExists = User::where('email', $email)->first();
 
-        if ($userExists && $userExists->email_verified_at !== null) {
-            // User exists and is verified
+        if ($userExists) {
             return response()->json([
-                'status'       => false,
-                'is_verified'  => 1,
-                'is_register'  => 1,
-            ], 422);
-        } elseif ($userExists) {
-            // User exists but is not verified
-            return response()->json([
-                'status'       => false,
-                'is_verified'  => 0,
-                'is_register'  => 1,
-            ], 422);
+                'status'  => true,
+                'message' => $userExists->otp_verified_at
+                    ? 'Email registered and verified.'
+                    : 'Email registered but Email not verified.',
+                'data'    => [
+                    'is_verified'   => $userExists->otp_verified_at ? 1 : 0,
+                    'is_registered' => 1
+                ],
+            ], $userExists->otp_verified_at ? 200 : 422);
         }
+
 
 
         try {
