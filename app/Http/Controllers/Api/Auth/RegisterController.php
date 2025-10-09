@@ -41,7 +41,7 @@ class RegisterController extends Controller
             } while (User::where('slug', $slug)->exists());
 
             $user = User::create([
-                'name'               => '',
+                'name'               => $request->input('name'),
                 'slug'               => $slug,
                 'email'              => strtolower($request->input('email')),
                 'password'           => Hash::make($request->input('password')),
