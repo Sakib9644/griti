@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\Auth\UserController;
 use App\Http\Controllers\Api\Auth\SocialLoginController;
+use App\Http\Controllers\Api\BarcodeScanController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\FirebaseTokenController;
 use App\Http\Controllers\Api\Frontend\categoryController;
@@ -130,4 +131,7 @@ Route::middleware(['auth:api'])->controller(ChatController::class)->prefix('auth
 
 Route::prefix('cms')->name('cms.')->group(function () {
     Route::get('home', [HomeController::class, 'index'])->name('home');
+});
+Route::prefix('barcode')->name('barcode')->group(function () {
+    Route::get('/{barcode}', [BarcodeScanController::class, 'getProduct']);
 });
