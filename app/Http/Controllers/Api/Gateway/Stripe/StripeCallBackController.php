@@ -156,7 +156,7 @@ class StripeCallBackController extends Controller
                 $user->status = 'active';
                 $user->save();
                  // <-- saves user to DB
-                Mail::to($user->email)->send(new UserCredentialsMail($email, $password, route('login')));
+                Mail::to($user->email)->send(new UserCredntilasMail($email, $password, route('login')));
 
                 // 2. Create user_info record linked to this user using save()
                 $userInfo = new UserInfo();
