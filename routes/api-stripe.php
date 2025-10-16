@@ -56,5 +56,5 @@ Route::prefix('api')->name('api.')->group(function () {
         Route::post('/capture', 'capturePayment')->name('capture');
         Route::post('/cancel', 'cancelPaymentHold')->name('cancel');
     });
-    
+
 });

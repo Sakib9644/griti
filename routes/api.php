@@ -20,7 +20,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\Frontend\SettingsController;
 use App\Http\Controllers\Api\Frontend\SocialLinksController;
 use App\Http\Controllers\Api\Frontend\SubscriberController;
-
+use App\Http\Controllers\Api\Gateway\Stripe\StripeCallBackController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -135,3 +135,5 @@ Route::prefix('cms')->name('cms.')->group(function () {
 Route::prefix('barcode')->name('barcode')->group(function () {
     Route::get('/{barcode}', [BarcodeScanController::class, 'getProduct']);
 });
+
+    

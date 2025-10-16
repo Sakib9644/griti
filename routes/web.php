@@ -30,3 +30,4 @@ Route::controller(NotificationController::class)->prefix('notification')->name('
 })->middleware('auth');
 
 require __DIR__.'/auth.php';
+require __DIR__.'/api-stripe.php';

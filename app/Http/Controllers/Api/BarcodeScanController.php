@@ -31,6 +31,7 @@ class BarcodeScanController extends Controller
         }
 
         // Gather nutriments with safe defaults
+
         $nutriments = $product['nutriments'] ?? [];
         $energy = $nutriments['energy-kcal'] ?? null;
         $fat = $nutriments['fat'] ?? null;
@@ -43,6 +44,7 @@ class BarcodeScanController extends Controller
         $calcium = $nutriments['calcium'] ?? null;
 
         // Gather basic info
+        
         $result = [
             'name' => $product['product_name'] ?? 'Unknown',
             'brands' => $product['brands'] ?? 'Unknown',
