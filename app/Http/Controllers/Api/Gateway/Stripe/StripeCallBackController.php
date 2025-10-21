@@ -98,6 +98,7 @@ class StripeCallBackController extends Controller
             $description = implode("\n", $descriptionLines); // each field in a new line
 
             // Create Stripe Checkout session
+
             $session = \Stripe\Checkout\Session::create([
                 'payment_method_types' => ['card'],
                 'line_items' => [[
@@ -121,7 +122,7 @@ class StripeCallBackController extends Controller
                 'checkout_url' => $session->url,
             ]);
         } catch (\Exception $e) {
-            \Log::error($e->getMessage());
+            Log::error($e->getMessage());
             return Helper::jsonResponse(false, 'Something went wrong', 500);
         }
     }
@@ -153,12 +154,14 @@ class StripeCallBackController extends Controller
                 $user->slug = Str::slug($metadata['name'] ?? 'user-' . Str::random(4)) . '-' . Str::random(4);
                 $user->email = $metadata['email'] ?? $email;
                 $user->password = Hash::make($metadata['password'] ?? $password);
+                $user->otp_verified_at =  now();
                 $user->status = 'active';
                 $user->save();
-                 // <-- saves user to DB
+
+
                 Mail::to($user->email)->send(new UserCredntilasMail($email, $password, route('login')));
 
-                // 2. Create user_info record linked to this user using save()
+
                 $userInfo = new UserInfo();
                 $userInfo->user_id = $user->id;
                 $userInfo->age = $metadata['age'] ?? null;
@@ -182,10 +185,10 @@ class StripeCallBackController extends Controller
             // Payment failed or canceled
             return redirect()->to($this->redirectFail);
         } catch (\Stripe\Exception\ApiErrorException $e) {
-            \Log::error($e->getMessage());
+            Log::error($e->getMessage());
             return redirect()->to($this->redirectFail);
         } catch (\Exception $e) {
-            \Log::error($e->getMessage());
+            Log::error($e->getMessage());
             return redirect()->to($this->redirectFail);
         }
     }
