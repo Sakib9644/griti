@@ -34,98 +34,106 @@ class StripeCallBackController extends Controller
     }
 
     public function checkout(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'price' => 'required|numeric',
-            'age' => 'nullable|integer',
-            'bmi' => 'nullable|string',
-            'body_part_focus' => 'nullable|string',
-            'body_satisfaction' => 'nullable|string',
-            'celebration_plan' => 'nullable|string',
-            'current_body_type' => 'nullable|string',
-            'current_weight' => 'nullable|numeric',
-            'dream_body' => 'nullable|string',
-            'height' => 'nullable|numeric',
-            'target_weight' => 'nullable|numeric',
-            'trying_duration' => 'nullable|string',
-            'urgent_improvement' => 'nullable|string',
+{
+    $validator = Validator::make($request->all(), [
+        'price' => 'required|numeric',
+        'age' => 'nullable|integer',
+        'bmi' => 'nullable|string',
+        'body_part_focus' => 'nullable|string',
+        'body_satisfaction' => 'nullable|string',
+        'celebration_plan' => 'nullable|string',
+        'current_body_type' => 'nullable|string',
+        'current_weight' => 'nullable|numeric',
+        'dream_body' => 'nullable|string',
+        'height' => 'nullable|numeric',
+        'target_weight' => 'nullable|numeric',
+        'trying_duration' => 'nullable|string',
+        'urgent_improvement' => 'nullable|string',
+        'email' => 'email|required',
+    ]);
+
+    if ($validator->fails()) {
+        return Helper::jsonResponse(false, 'Validation failed', 422, $validator->errors());
+    }
+
+    try {
+        $data = $validator->validated();
+
+        // Check if email already exists
+        $existingUser = \App\Models\User::where('email', $data['email'])->first();
+        if ($existingUser) {
+            return Helper::jsonResponse(false, 'Email already exists', 409);
+        }
+
+        $successUrl = route('api.payment.stripe.success') . '?token={CHECKOUT_SESSION_ID}';
+        $cancelUrl = route('api.payment.stripe.cancel') . '?token={CHECKOUT_SESSION_ID}';
+
+        // Prepare metadata
+        $metadata = [
+            'price' => $data['price'],
+        ];
+
+        foreach (
+            $request->only([
+                'age',
+                'bmi',
+                'body_part_focus',
+                'body_satisfaction',
+                'celebration_plan',
+                'current_body_type',
+                'current_weight',
+                'dream_body',
+                'height',
+                'target_weight',
+                'trying_duration',
+                'urgent_improvement',
+                'email',
+            ]) as $key => $value
+        ) {
+            $metadata[$key] = $value ?? '';
+        }
+
+        // Prepare ordered description
+        $descriptionLines = [];
+        $counter = 1;
+        foreach ($metadata as $key => $value) {
+            if ($value !== '') {
+                $label = ucfirst(str_replace('_', ' ', $key));
+                $descriptionLines[] = "{$counter}. {$label}: {$value}";
+                $counter++;
+            }
+        }
+        $description = implode("\n", $descriptionLines);
+
+        // Create Stripe Checkout session
+        $session = \Stripe\Checkout\Session::create([
+            'payment_method_types' => ['card'],
+            'line_items' => [[
+                'price_data' => [
+                    'currency' => 'usd',
+                    'product_data' => [
+                        'name' => 'Payment Amount: $' . $data['price'],
+                        'description' => $description,
+                    ],
+                    'unit_amount' => $data['price'] * 100,
+                ],
+                'quantity' => 1,
+            ]],
+            'mode' => 'payment',
+            'metadata' => $metadata,
+            'success_url' => $successUrl,
+            'cancel_url' => $cancelUrl,
         ]);
 
-        if ($validator->fails()) {
-            return Helper::jsonResponse(false, 'Validation failed', 422, $validator->errors());
-        }
-
-        try {
-            $data = $validator->validated();
-
-            $successUrl = route('api.payment.stripe.success') . '?token={CHECKOUT_SESSION_ID}';
-            $cancelUrl = route('api.payment.stripe.cancel') . '?token={CHECKOUT_SESSION_ID}';
-
-            // Prepare metadata
-            $metadata = [
-                'price' => $data['price'], // <-- add price here
-            ];
-
-            foreach (
-                $request->only([
-                    'age',
-                    'bmi',
-                    'body_part_focus',
-                    'body_satisfaction',
-                    'celebration_plan',
-                    'current_body_type',
-                    'current_weight',
-                    'dream_body',
-                    'height',
-                    'target_weight',
-                    'trying_duration',
-                    'urgent_improvement',
-                ]) as $key => $value
-            ) {
-                $metadata[$key] = $value ?? '';
-            }
-
-            // Prepare ordered description
-            $descriptionLines = [];
-            $counter = 1;
-            foreach ($metadata as $key => $value) {
-                if ($value !== '') {
-                    $label = ucfirst(str_replace('_', ' ', $key));
-                    $descriptionLines[] = "{$counter}. {$label}: {$value}";
-                    $counter++;
-                }
-            }
-            $description = implode("\n", $descriptionLines); // each field in a new line
-
-            // Create Stripe Checkout session
-
-            $session = \Stripe\Checkout\Session::create([
-                'payment_method_types' => ['card'],
-                'line_items' => [[
-                    'price_data' => [
-                        'currency' => 'usd',
-                        'product_data' => [
-                            'name' => 'Payment Amount: $' . $data['price'],
-                            'description' => $description,
-                        ],
-                        'unit_amount' => $data['price'] * 100,
-                    ],
-                    'quantity' => 1,
-                ]],
-                'mode' => 'payment',
-                'metadata' => $metadata,
-                'success_url' => $successUrl,
-                'cancel_url' => $cancelUrl,
-            ]);
-
-            return Helper::jsonResponse(true, 'Checkout session created successfully', 200, [
-                'checkout_url' => $session->url,
-            ]);
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return Helper::jsonResponse(false, 'Something went wrong', 500);
-        }
+        return Helper::jsonResponse(true, 'Checkout session created successfully', 200, [
+            'checkout_url' => $session->url,
+        ]);
+    } catch (\Exception $e) {
+        Log::error($e->getMessage());
+        return Helper::jsonResponse(false, 'Something went wrong', 500);
     }
+}
+
 
 
 
@@ -146,7 +154,7 @@ class StripeCallBackController extends Controller
                 // Collect metadata safely
                 $metadata = $session->metadata ?? [];
 
-                $email = 'user' . rand(1000, 9999) . '@example.com';
+                $email = $metadata['email'];
                 $password = Str::random(10);
                 // 1. Create a new user using save()
                 $user = new User();
