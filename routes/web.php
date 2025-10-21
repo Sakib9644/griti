@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Auth\SocialLoginController;
-use App\Http\Controllers\web\Backend\PlanController;
+use App\Http\Controllers\Web\Backend\PlanController;
 use App\Http\Controllers\Web\Frontend\AffiliateController;
 use App\Http\Controllers\Web\Frontend\ContactController;
 use App\Http\Controllers\Web\Frontend\HomeController;
