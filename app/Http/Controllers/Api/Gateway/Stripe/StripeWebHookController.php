@@ -8,6 +8,7 @@ use App\Services\StripeService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Stripe\Stripe;
 use Stripe\Webhook;
 use Stripe\Exception\ApiErrorException;
@@ -64,35 +65,49 @@ class StripeWebHookController extends Controller
     }
 
 
-    public function webhook(Request $request): JsonResponse
+    public function webhook(Request $request)
     {
-
-        $payload        = $request->getContent();
-        $sigHeader      = $request->header('Stripe-Signature');
-        $endpointSecret = env('STRIPE_WEBHOOK_SECRET');
+        $payload = $request->getContent();
+        $sig_header = $request->header('Stripe-Signature');
+        $endpoint_secret = env('STRIPE_WEBHOOK_SECRET');
 
         try {
-            $event = Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
-        } catch (UnexpectedValueException $e) {
-            return Helper::jsonResponse(false, $e->getMessage(), 400, []);
-        } catch (SignatureVerificationException $e) {
-            return Helper::jsonResponse(false, $e->getMessage(), 400, []);
+            $event = \Stripe\Webhook::constructEvent(
+                $payload,
+                $sig_header,
+                $endpoint_secret
+            );
+        } catch (\UnexpectedValueException $e) {
+            // Invalid payload
+            return response('Invalid payload', 400);
+        } catch (\Stripe\Exception\SignatureVerificationException $e) {
+            // Invalid signature
+            return response('Invalid signature', 400);
         }
 
-        //? Handle the event based on its type
-        try {
-            switch ($event->type) {
-                case 'payment_intent.succeeded':
-                    $this->stripeService->success($event->data->object);
-                    return Helper::jsonResponse(true, 'Payment successful', 200, []);
-                case 'payment_intent.payment_failed':
-                    $this->stripeService->failure($event->data->object);
-                    return Helper::jsonResponse(true, 'Payment failed', 200, []);
-                default:
-                    return Helper::jsonResponse(true, 'Unhandled event type', 200, []);
-            }
-        } catch (Exception $e) {
-            return Helper::jsonResponse(false, $e->getMessage(), 500, []);
+        // Handle the event
+        switch ($event->type) {
+            case 'invoice.payment_succeeded':
+                $invoice = $event->data->object;
+                $customer_email = $invoice->customer_email ?? null;
+
+                if ($customer_email) {
+                    $user = \App\Models\User::where('email', $customer_email)->first();
+                    if ($user) {
+                        $userInfo = \App\Models\UserInfo::where('user_id', $user->id)->first();
+                        if ($userInfo) {
+                            $userInfo->payment_status = 'paid';
+                            $userInfo->save();
+                            Log::info("Payment updated to PAID for user: {$user->email}");
+                        }
+                    }
+                }
+                break;
+
+            default:
+                Log::info('Unhandled Stripe event: ' . $event->type);
         }
+
+        return response('Webhook handled', 200);
     }
 }
