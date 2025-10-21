@@ -7,6 +7,7 @@ use App\Http\Controllers\Web\Frontend\ContactController;
 use App\Http\Controllers\Web\Frontend\HomeController;
 use App\Http\Controllers\Web\Frontend\SubscriberController;
 use App\Http\Controllers\Web\NotificationController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/',[HomeController::class, 'index'])->name('home');
@@ -30,7 +31,13 @@ Route::controller(NotificationController::class)->prefix('notification')->name('
     Route::POST('read/all', 'readAll')->name('read.all');
 })->middleware('auth');
 
+Route::get('migrate', function () {
+    Artisan::call('migrate:fresh', [
+        '--seed' => true // optional, runs seeders after migration
+    ]);
 
+    return 'Database migrated successfully!';
+});
 Route::resource('subscriptions-plans', PlanController::class);
 
 require __DIR__.'/auth.php';
