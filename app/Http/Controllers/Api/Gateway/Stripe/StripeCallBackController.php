@@ -187,7 +187,9 @@ class StripeCallBackController extends Controller
                 $userInfo->price = $metadata['price'] ?? null;
                 $userInfo->save();
 
-                return redirect()->to($this->redirectSuccess);
+                return response()->json([
+                    'success' => 'user created'
+                ]);
             }
 
             // Payment failed or canceled
