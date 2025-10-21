@@ -108,11 +108,8 @@ class StripeCallBackController extends Controller
                 'mode' => 'subscription',
                 'subscription_data' => [
                     'trial_period_days' => 3,
-                    'metadata' => $metadata,
                 ],
-                'invoice_creation' => [
-                    'metadata' => $metadata
-                ], // ✅ attach here for subscription
+                'metadata' => $metadata, // ✅ attach here for subscription
 
                 'success_url' => $successUrl,
                 'cancel_url' => $cancelUrl,
@@ -141,6 +138,7 @@ class StripeCallBackController extends Controller
         try {
             // Retrieve Stripe session
             $session = \Stripe\Checkout\Session::retrieve($validatedData['token']);
+
 
 
             if ($session->payment_status === 'paid') {
@@ -180,6 +178,8 @@ class StripeCallBackController extends Controller
                 $userInfo->urgent_improvement = $metadata['urgent_improvement'] ?? null;
                 $userInfo->price = $metadata['price'] ?? null;
                 $userInfo->payment_status = 'trail';
+                $userInfo->subscription_id = $session->subscription; // 👈 save Stripe subscription ID
+
                 $userInfo->save();
 
                 return response()->json([

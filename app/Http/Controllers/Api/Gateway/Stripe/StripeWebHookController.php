@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Gateway\Stripe;
 
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
+use App\Models\UserInfo;
 use App\Services\StripeService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -65,49 +66,33 @@ class StripeWebHookController extends Controller
     }
 
 
-    public function webhook(Request $request)
-    {
-        $payload = $request->getContent();
-        $sig_header = $request->header('Stripe-Signature');
-        $endpoint_secret = env('STRIPE_WEBHOOK_SECRET');
+   public function webhook(Request $request)
+{
+    $payload = $request->getContent();
+    $sig_header = $request->header('Stripe-Signature');
+    $endpoint_secret = env('STRIPE_WEBHOOK_SECRET');
 
-        try {
-            $event = \Stripe\Webhook::constructEvent(
-                $payload,
-                $sig_header,
-                $endpoint_secret
-            );
-        } catch (\UnexpectedValueException $e) {
-            // Invalid payload
-            return response('Invalid payload', 400);
-        } catch (\Stripe\Exception\SignatureVerificationException $e) {
-            // Invalid signature
-            return response('Invalid signature', 400);
-        }
-
-        // Handle the event
-        switch ($event->type) {
-            case 'invoice.payment_succeeded':
-                $invoice = $event->data->object;
-                $customer_email = $invoice->customer_email ?? null;
-
-                if ($customer_email) {
-                    $user = \App\Models\User::where('email', $customer_email)->first();
-                    if ($user) {
-                        $userInfo = \App\Models\UserInfo::where('user_id', $user->id)->first();
-                        if ($userInfo) {
-                            $userInfo->payment_status = 'paid';
-                            $userInfo->save();
-                            Log::info("Payment updated to PAID for user: {$user->email}");
-                        }
-                    }
-                }
-                break;
-
-            default:
-                Log::info('Unhandled Stripe event: ' . $event->type);
-        }
-
-        return response('Webhook handled', 200);
+    try {
+        $event = \Stripe\Webhook::constructEvent($payload, $sig_header, $endpoint_secret);
+    } catch (\Exception $e) {
+        return response('Invalid payload', 400);
     }
+
+    if ($event->type === 'invoice.payment_succeeded') {
+        $invoice = $event->data->object;
+        $subscriptionId = $invoice->subscription; // 👈 Stripe subscription ID
+
+        $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
+        if ($userInfo) {
+            $userInfo->payment_status = 'paid';
+            $userInfo->save();
+            Log::info("Payment marked as PAID for user_id: {$userInfo->user_id}");
+        } else {
+            Log::warning("No user info found for subscription: {$subscriptionId}");
+        }
+    }
+
+    return response('Webhook handled', 200);
+}
+
 }
