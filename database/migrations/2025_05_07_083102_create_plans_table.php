@@ -9,15 +9,15 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+      public function up(): void
     {
         Schema::create('plans', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('description');
+            $table->string('stripe_product_id')->nullable();
+            $table->string('stripe_price_id')->nullable();
             $table->integer('price');
-            $table->string('stripe_price_id');
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->string('interval')->default('month');
             $table->timestamps();
         });
     }

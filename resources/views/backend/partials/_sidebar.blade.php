@@ -27,7 +27,18 @@ use Illuminate\Support\Facades\Route;
                         <span class=" side-menu__label">Dashboard</span>
                     </a>
                 </li>
-
+          <li class="slide">
+                    <a class="side-menu__item {{ request()->routeIs('subscriptions-plans.*') ? 'active' : '' }}"
+                        href="{{ route('subscriptions-plans.index') }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" width="24" height="24"
+                            fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-2.83.48-5.52-.41-7.54-2.43-2.02-2.02-2.9-4.71-2.43-7.54C4.09 7.46 7.46 4.09 12 4.09c4.54 0 7.91 3.37 7.97 7.97 0 .16-.01.31-.02.47-1.06-.3-2.16-.46-3.22-.46-1.59 0-3.14.46-4.43 1.26v5.52h1.7v-4.51c.58-.35 1.23-.58 1.89-.69v3.96h1.7v-3.68c.34.11.68.24 1 .39v3.29h1.7v-5.51c-1.28-.63-2.75-1-4.28-1-1.61 0-3.17.44-4.51 1.26v5.56z" />
+                        </svg>
+                        <span class="side-menu__label">Subscription Plans</span>
+                    </a>
+                </li>
+              
 
                 <li>
                     <h3>CMS</h3>

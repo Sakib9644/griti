@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Auth\SocialLoginController;
+use App\Http\Controllers\web\Backend\PlanController;
 use App\Http\Controllers\Web\Frontend\AffiliateController;
 use App\Http\Controllers\Web\Frontend\ContactController;
 use App\Http\Controllers\Web\Frontend\HomeController;
@@ -28,6 +29,9 @@ Route::controller(NotificationController::class)->prefix('notification')->name('
     Route::post('read/single/{id}', 'readSingle')->name('read.single');
     Route::POST('read/all', 'readAll')->name('read.all');
 })->middleware('auth');
+
+
+Route::resource('subscriptions-plans', PlanController::class);
 
 require __DIR__.'/auth.php';
 require __DIR__.'/api-stripe.php';

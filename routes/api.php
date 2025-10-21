@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\Frontend\SettingsController;
 use App\Http\Controllers\Api\Frontend\SocialLinksController;
 use App\Http\Controllers\Api\Frontend\SubscriberController;
 use App\Http\Controllers\Api\Gateway\Stripe\StripeCallBackController;
+use App\Http\Controllers\Api\PlaninfoController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -136,4 +137,9 @@ Route::prefix('barcode')->name('barcode')->group(function () {
     Route::get('/{barcode}', [BarcodeScanController::class, 'getProduct']);
 });
 
-    
+
+Route::prefix('plans')->name('barcode')->group(function () {
+    Route::get('/', [PlaninfoController::class, 'index']);
+});
+
+

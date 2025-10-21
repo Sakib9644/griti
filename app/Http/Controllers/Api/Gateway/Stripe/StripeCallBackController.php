@@ -33,10 +33,11 @@ class StripeCallBackController extends Controller
         $this->redirectSuccess = env("APP_URL") . "/success";
     }
 
-    public function checkout(Request $request)
+   public function checkout(Request $request)
 {
     $validator = Validator::make($request->all(), [
-        'price' => 'required|numeric',
+        'plan_id' => 'required|exists:plans,id', // 👈 required
+        'email' => 'required|email',
         'age' => 'nullable|integer',
         'bmi' => 'nullable|string',
         'body_part_focus' => 'nullable|string',
@@ -49,7 +50,6 @@ class StripeCallBackController extends Controller
         'target_weight' => 'nullable|numeric',
         'trying_duration' => 'nullable|string',
         'urgent_improvement' => 'nullable|string',
-        'email' => 'email|required',
     ]);
 
     if ($validator->fails()) {
@@ -59,7 +59,10 @@ class StripeCallBackController extends Controller
     try {
         $data = $validator->validated();
 
-        // Check if email already exists
+        // ✅ Fetch the plan from DB
+        $plan = \App\Models\Plan::findOrFail($data['plan_id']);
+
+        // Check if email exists
         $existingUser = \App\Models\User::where('email', $data['email'])->first();
         if ($existingUser) {
             return Helper::jsonResponse(false, 'Email already exists', 409);
@@ -68,58 +71,35 @@ class StripeCallBackController extends Controller
         $successUrl = route('api.payment.stripe.success') . '?token={CHECKOUT_SESSION_ID}';
         $cancelUrl = route('api.payment.stripe.cancel') . '?token={CHECKOUT_SESSION_ID}';
 
-        // Prepare metadata
+        // ✅ Attach plan info in metadata
         $metadata = [
-            'price' => $data['price'],
+            'plan_id' => $plan->id,
+            'plan_name' => $plan->name,
+            'price' => $plan->price,
+            'email' => $data['email'],
         ];
 
         foreach (
             $request->only([
-                'age',
-                'bmi',
-                'body_part_focus',
-                'body_satisfaction',
-                'celebration_plan',
-                'current_body_type',
-                'current_weight',
-                'dream_body',
-                'height',
-                'target_weight',
-                'trying_duration',
-                'urgent_improvement',
-                'email',
+                'age', 'bmi', 'body_part_focus', 'body_satisfaction', 'celebration_plan',
+                'current_body_type', 'current_weight', 'dream_body', 'height', 'target_weight',
+                'trying_duration', 'urgent_improvement',
             ]) as $key => $value
         ) {
             $metadata[$key] = $value ?? '';
         }
 
-        // Prepare ordered description
-        $descriptionLines = [];
-        $counter = 1;
-        foreach ($metadata as $key => $value) {
-            if ($value !== '') {
-                $label = ucfirst(str_replace('_', ' ', $key));
-                $descriptionLines[] = "{$counter}. {$label}: {$value}";
-                $counter++;
-            }
-        }
-        $description = implode("\n", $descriptionLines);
-
-        // Create Stripe Checkout session
+        // ✅ Create Stripe Checkout session for subscription
         $session = \Stripe\Checkout\Session::create([
             'payment_method_types' => ['card'],
             'line_items' => [[
-                'price_data' => [
-                    'currency' => 'usd',
-                    'product_data' => [
-                        'name' => 'Payment Amount: $' . $data['price'],
-                        'description' => $description,
-                    ],
-                    'unit_amount' => $data['price'] * 100,
-                ],
+                'price' => $plan->stripe_price_id, // 👈 dynamic from DB
                 'quantity' => 1,
             ]],
-            'mode' => 'payment',
+            'mode' => 'subscription',
+            'subscription_data' => [
+                'trial_period_days' => 3,
+            ],
             'metadata' => $metadata,
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
@@ -133,6 +113,7 @@ class StripeCallBackController extends Controller
         return Helper::jsonResponse(false, 'Something went wrong', 500);
     }
 }
+
 
 
 
