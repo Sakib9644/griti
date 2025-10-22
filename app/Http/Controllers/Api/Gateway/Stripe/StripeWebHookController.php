@@ -84,41 +84,34 @@ public function webhook(Request $request)
         'id' => $event->id
     ]);
 
+    // Only process invoice payment succeeded events
     if ($event->type === 'invoice.payment_succeeded') {
         $invoice = $event->data->object;
 
-        // Only mark payment as PAID if amount > 0
-        if ($invoice->amount_paid > 0) {
-            $subscriptionId = $this->getSubscriptionIdFromInvoice($invoice);
+        Log::info('Invoice payment succeeded received: ', ['invoice_id' => $invoice->id]);
 
-            if ($subscriptionId) {
-                $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
+        $subscriptionId = $this->getSubscriptionIdFromInvoice($invoice);
 
-                if ($userInfo) {
-                    $userInfo->payment_status = 'paid';
-                    $userInfo->trial_active = false; // mark trial ended
-                    $userInfo->save();
+        Log::info('Subscription ID received in webhook: ' . ($subscriptionId ?? 'none'));
 
-                    Log::info("Payment marked as PAID for subscription: {$subscriptionId}");
-                } else {
-                    Log::warning("No user info found for subscription: {$subscriptionId}");
-                }
+        if ($subscriptionId) {
+            $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
+
+            if ($userInfo) {
+                $userInfo->payment_status = 'paid';
+                $userInfo->save();
+                Log::info("Payment marked as PAID for subscription: {$subscriptionId}");
             } else {
-                Log::warning("No subscription ID found in invoice object", [
-                    'invoice_id' => $invoice->id,
-                    'billing_reason' => $invoice->billing_reason ?? 'unknown'
-                ]);
+                Log::warning("No user info found for subscription: {$subscriptionId}");
             }
         } else {
-            // This is a trial invoice (amount 0), don't mark as paid
-            Log::info("Trial invoice received, not marking paid", [
+            Log::warning("No subscription ID found in invoice object", [
                 'invoice_id' => $invoice->id,
-                'amount_paid' => $invoice->amount_paid,
-                'billing_reason' => $invoice->billing_reason
+                'billing_reason' => $invoice->billing_reason ?? 'unknown'
             ]);
         }
     } else {
-        // log other events
+        // Log other event types for debugging but don't process them
         Log::info('Other Stripe event type received (not processed)', [
             'type' => $event->type,
             'id' => $event->id
@@ -129,23 +122,30 @@ public function webhook(Request $request)
 }
 
 /**
- * Extract subscription ID from invoice
+ * Extract subscription ID from invoice using multiple fallback methods
  */
 private function getSubscriptionIdFromInvoice($invoice)
 {
     $subscriptionId = null;
 
+    // Method 1: Check if invoice has a direct subscription reference
     if (isset($invoice->subscription) && !empty($invoice->subscription)) {
         $subscriptionId = $invoice->subscription;
-    } else if (isset($invoice->parent) &&
-               isset($invoice->parent->type) &&
-               $invoice->parent->type === 'subscription_details' &&
-               isset($invoice->parent->subscription_details->subscription)) {
+    }
+    // Method 2: Try to get from invoice parent (subscription_details)
+    else if (isset($invoice->parent) &&
+             isset($invoice->parent->type) &&
+             $invoice->parent->type === 'subscription_details' &&
+             isset($invoice->parent->subscription_details->subscription)) {
         $subscriptionId = $invoice->parent->subscription_details->subscription;
-    } else if (isset($invoice->lines) &&
-               isset($invoice->lines->data) &&
-               count($invoice->lines->data) > 0) {
+    }
+    // Method 3: Try to get from line items (subscription_item_details)
+    else if (isset($invoice->lines) &&
+             isset($invoice->lines->data) &&
+             count($invoice->lines->data) > 0) {
+
         $lineItem = $invoice->lines->data[0];
+
         if (isset($lineItem->parent) &&
             isset($lineItem->parent->type) &&
             $lineItem->parent->type === 'subscription_item_details' &&
@@ -156,6 +156,5 @@ private function getSubscriptionIdFromInvoice($invoice)
 
     return $subscriptionId;
 }
-
 
 }
