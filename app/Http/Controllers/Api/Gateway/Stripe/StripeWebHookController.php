@@ -66,7 +66,7 @@ class StripeWebHookController extends Controller
     }
 
 
-   public function webhook(Request $request)
+public function webhook(Request $request)
 {
     $payload = $request->getContent();
     $sig_header = $request->header('Stripe-Signature');
@@ -74,23 +74,46 @@ class StripeWebHookController extends Controller
 
     try {
         $event = \Stripe\Webhook::constructEvent($payload, $sig_header, $endpoint_secret);
-    } catch (\Exception $e) {
+    } catch (\UnexpectedValueException $e) {
+        // Invalid payload
         return response('Invalid payload', 400);
+    } catch (\Stripe\Exception\SignatureVerificationException $e) {
+        // Invalid signature
+        return response('Invalid signature', 400);
     }
 
-    if ($event->type === 'invoice.payment_succeeded') {
-        $invoice = $event->data->object;
-        $subscriptionId = $invoice->subscription;
-        dd(  $subscriptionId ); // 👈 Stripe subscription ID
+    switch ($event->type) {
+        case 'invoice.payment_succeeded':
+            $invoice = $event->data->object;
+            $subscriptionId = $invoice->subscription;
 
-        $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
-        if ($userInfo) {
-            $userInfo->payment_status = 'paid';
-            $userInfo->save();
-            Log::info("Payment marked as PAID for user_id: {$userInfo->user_id}");
-        } else {
-            Log::warning("No user info found for subscription: {$subscriptionId}");
-        }
+            // Log subscription ID instead of dd()
+            Log::info("Invoice payment succeeded for subscription: {$subscriptionId}");
+
+            $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
+            if ($userInfo) {
+                $userInfo->payment_status = 'paid';
+                $userInfo->save();
+                Log::info("Payment marked as PAID for user_id: {$userInfo->user_id}");
+            } else {
+                Log::warning("No user info found for subscription: {$subscriptionId}");
+            }
+            break;
+
+        case 'invoice.payment_failed':
+            $invoice = $event->data->object;
+            $subscriptionId = $invoice->subscription;
+            Log::warning("Payment FAILED for subscription: {$subscriptionId}");
+            break;
+
+        case 'customer.subscription.deleted':
+            $subscription = $event->data->object;
+            Log::info("Subscription canceled: {$subscription->id}");
+            break;
+
+        default:
+            Log::info("Unhandled Stripe webhook event: {$event->type}");
+            break;
     }
 
     return response('Webhook handled', 200);
