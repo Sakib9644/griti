@@ -78,13 +78,16 @@ public function webhook(Request $request)
         return response('Invalid payload', 400);
     }
 
-    $invoice = $event->data->object ;
+    $invoice = $event->data->object;
 
-        Log::info('Subscription ID received in webhook: ' . ($invoice  ?? 'none'));
+    Log::info('Invoice received: ', ['invoice' => json_decode(json_encode($invoice), true)]);
 
+    $lineItem = $invoice->lines->data[0] ?? null;
+    $subscriptionId = null;
 
-    $subscriptionId = $invoice->lines->data[0]->parent->subscription_item_details->subscription;
-
+    if ($lineItem && isset($lineItem->parent) && isset($lineItem->parent->subscription_item_details)) {
+        $subscriptionId = $lineItem->parent->subscription_item_details->subscription ?? null;
+    }
 
     Log::info('Subscription ID received in webhook: ' . ($subscriptionId ?? 'none'));
 
@@ -100,12 +103,13 @@ public function webhook(Request $request)
                 Log::warning("No user info found for subscription: {$subscriptionId}");
             }
         } else {
-            Log::warning("No subscription ID found in invoice object", ['invoice' => $invoice]);
+            Log::warning("No subscription ID found in invoice object", ['invoice' => json_decode(json_encode($invoice), true)]);
         }
     }
 
     return response('Webhook handled', 200);
 }
+
 
 
 }
