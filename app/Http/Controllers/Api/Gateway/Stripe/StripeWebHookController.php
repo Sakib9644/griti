@@ -77,17 +77,20 @@ class StripeWebHookController extends Controller
     } catch (\Exception $e) {
         return response('Invalid payload', 400);
     }
+    Log::info("invoice:{ $event }");
 
     if ($event->type === 'invoice.payment_succeeded') {
         $invoice = $event->data->object;
         $subscriptionId = $invoice->subscription;
+
+
 
         $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
         Log::info($userInfo );
         if ($userInfo) {
             $userInfo->payment_status = 'paid';
             $userInfo->save();
-            Log::info("Payment marked as PAID for user_id: {$userInfo->user_id}");
+            Log::info("Payment marked as PAID for user_id: { $subscriptionId}");
         } else {
             Log::warning("No user info found for subscription: {$subscriptionId}");
         }
