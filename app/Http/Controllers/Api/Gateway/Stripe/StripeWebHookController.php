@@ -80,7 +80,8 @@ class StripeWebHookController extends Controller
 
     if ($event->type === 'invoice.payment_succeeded') {
         $invoice = $event->data->object;
-        $subscriptionId = $invoice->subscription; // 👈 Stripe subscription ID
+        $subscriptionId = $invoice->subscription;
+        dd(  $subscriptionId ); // 👈 Stripe subscription ID
 
         $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
         if ($userInfo) {
