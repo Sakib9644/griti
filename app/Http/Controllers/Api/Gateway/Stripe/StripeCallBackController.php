@@ -99,22 +99,22 @@ class StripeCallBackController extends Controller
             }
 
             // ✅ Create Stripe Checkout session for subscription
+            $trialEnd = now()->addMinutes(10)->timestamp;
+
             $session = \Stripe\Checkout\Session::create([
                 'payment_method_types' => ['card'],
                 'line_items' => [[
-                    'price' => $plan->stripe_price_id, // 👈 dynamic from DB
+                    'price' => $plan->stripe_price_id,
                     'quantity' => 1,
                 ]],
                 'mode' => 'subscription',
                 'subscription_data' => [
-                    'trial_period_days' => 3,
+                    'trial_end' => $trialEnd, // 👈 use timestamp instead of trial_period_days
                 ],
-                'metadata' => $metadata, // ✅ attach here for subscription
-
+                'metadata' => $metadata,
                 'success_url' => $successUrl,
                 'cancel_url' => $cancelUrl,
             ]);
-
             return Helper::jsonResponse(true, 'Checkout session created successfully', 200, [
                 'checkout_url' => $session->url,
             ]);
