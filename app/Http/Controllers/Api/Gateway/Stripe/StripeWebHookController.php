@@ -66,7 +66,7 @@ class StripeWebHookController extends Controller
     }
 
 
-   public function webhook(Request $request)
+public function webhook(Request $request)
 {
     $payload = $request->getContent();
     $sig_header = $request->header('Stripe-Signature');
@@ -77,26 +77,36 @@ class StripeWebHookController extends Controller
     } catch (\Exception $e) {
         return response('Invalid payload', 400);
     }
-    Log::info("invoice:".$event->data->object->type->subscription);
+
+    $invoice = $event->data->object ?? null;
+
+    // Safely get subscription ID from different possible locations
+    $subscriptionId = $invoice->subscription
+        ?? $invoice->parent->subscription_details->subscription
+        ?? $invoice->lines->data[0]->parent->subscription_item_details->subscription
+        ?? null;
+
+    Log::info('Subscription ID received in webhook: ' . ($subscriptionId ?? 'none'));
 
     if ($event->type === 'invoice.payment_succeeded') {
-        $invoice = $event->data->object;
-        $subscriptionId = $invoice->subscription;
+        if ($subscriptionId) {
+            $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
+            Log::info('User info:', ['user' => $userInfo ? $userInfo->toArray() : null]);
 
-
-
-        $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
-        Log::info($userInfo );
-        if ($userInfo) {
-            $userInfo->payment_status = 'paid';
-            $userInfo->save();
-            Log::info("Payment marked as PAID for user_id: { $subscriptionId}");
+            if ($userInfo) {
+                $userInfo->payment_status = 'paid';
+                $userInfo->save();
+                Log::info("Payment marked as PAID for subscription: {$subscriptionId}");
+            } else {
+                Log::warning("No user info found for subscription: {$subscriptionId}");
+            }
         } else {
-            Log::warning("No user info found for subscription: {$subscriptionId}");
+            Log::warning("No subscription ID found in invoice object", ['invoice' => $invoice]);
         }
     }
 
     return response('Webhook handled', 200);
 }
+
 
 }
