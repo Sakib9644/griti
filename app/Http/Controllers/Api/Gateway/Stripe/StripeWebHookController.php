@@ -78,9 +78,12 @@ public function webhook(Request $request)
         return response('Invalid payload', 400);
     }
 
-    $invoice = $event->data->object ?? null;
+    $invoice = $event->data->object ;
 
-    $subscriptionId = $invoice->parent->subscription_item_details->subscription;
+        Log::info('Subscription ID received in webhook: ' . ($invoice  ?? 'none'));
+
+
+    $subscriptionId = $invoice->lines->data[0]->parent->subscription_item_details->subscription;
 
 
     Log::info('Subscription ID received in webhook: ' . ($subscriptionId ?? 'none'));
