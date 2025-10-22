@@ -83,6 +83,7 @@ class StripeWebHookController extends Controller
         $subscriptionId = $invoice->subscription;
 
         $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
+        Log::info($userInfo );
         if ($userInfo) {
             $userInfo->payment_status = 'paid';
             $userInfo->save();
