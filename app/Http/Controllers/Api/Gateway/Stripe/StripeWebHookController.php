@@ -80,9 +80,7 @@ public function webhook(Request $request)
 
     $invoice = $event->data->object ?? null;
 
-    // Safely get subscription ID from different possible locations
-    $subscriptionId = $invoice->subscription
-        ?? $invoice->parent->subscription_item_details->subscription;
+    $subscriptionId = $invoice->parent->subscription_item_details->subscription;
 
 
     Log::info('Subscription ID received in webhook: ' . ($subscriptionId ?? 'none'));
@@ -90,7 +88,6 @@ public function webhook(Request $request)
     if ($event->type === 'invoice.payment_succeeded') {
         if ($subscriptionId) {
             $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
-            Log::info('User info:', ['user' => $userInfo ? $userInfo->toArray() : null]);
 
             if ($userInfo) {
                 $userInfo->payment_status = 'paid';
