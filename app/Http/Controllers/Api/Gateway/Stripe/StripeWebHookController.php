@@ -82,11 +82,29 @@ public function webhook(Request $request)
 
     Log::info('Invoice received: ', ['invoice' => json_decode(json_encode($invoice), true)]);
 
-    $lineItem = $invoice->lines->data[0] ?? null;
     $subscriptionId = null;
 
-    if ($lineItem && isset($lineItem->parent) && isset($lineItem->parent->subscription_item_details)) {
-        $subscriptionId = $lineItem->parent->subscription_item_details->subscription ?? null;
+    // Method 1: Try to get subscription from invoice parent (most reliable)
+    if (isset($invoice->parent) &&
+        isset($invoice->parent->type) &&
+        $invoice->parent->type === 'subscription_details' &&
+        isset($invoice->parent->subscription_details->subscription)) {
+        $subscriptionId = $invoice->parent->subscription_details->subscription;
+    }
+    // Method 2: Try to get from line items
+    else if (isset($invoice->lines->data[0])) {
+        $lineItem = $invoice->lines->data[0];
+
+        if (isset($lineItem->parent) &&
+            isset($lineItem->parent->type) &&
+            $lineItem->parent->type === 'subscription_item_details' &&
+            isset($lineItem->parent->subscription_item_details->subscription)) {
+            $subscriptionId = $lineItem->parent->subscription_item_details->subscription;
+        }
+    }
+    // Method 3: Check for subscription field directly on invoice
+    else if (isset($invoice->subscription)) {
+        $subscriptionId = $invoice->subscription;
     }
 
     Log::info('Subscription ID received in webhook: ' . ($subscriptionId ?? 'none'));
@@ -103,13 +121,15 @@ public function webhook(Request $request)
                 Log::warning("No user info found for subscription: {$subscriptionId}");
             }
         } else {
-            Log::warning("No subscription ID found in invoice object", ['invoice' => json_decode(json_encode($invoice), true)]);
+            Log::warning("No subscription ID found in invoice object", [
+                'invoice_id' => $invoice->id,
+                'event_type' => $event->type
+            ]);
         }
     }
 
     return response('Webhook handled', 200);
 }
-
 
 
 }
