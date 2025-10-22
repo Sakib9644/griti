@@ -68,7 +68,7 @@ class StripeCallBackController extends Controller
                 return Helper::jsonResponse(false, 'Email already exists', 409);
             }
 
-            $successUrl = route('api.payment.stripe.success') . '?token={CHECKOUT_SESSION_ID}';
+            $successUrl = url('http://localhost:3000/checkout/payment_success') . '?token={CHECKOUT_SESSION_ID}';
             $cancelUrl = route('api.payment.stripe.cancel') . '?token={CHECKOUT_SESSION_ID}';
 
             // ✅ Attach plan info in metadata
@@ -107,7 +107,7 @@ class StripeCallBackController extends Controller
                 ]],
                 'mode' => 'subscription',
                 'subscription_data' => [
-                    'trial_period_days' => 1,
+                    'trial_period_days' => 3,
                 ],
                 'metadata' => $metadata, // ✅ attach here for subscription
 
@@ -183,8 +183,12 @@ class StripeCallBackController extends Controller
                 $userInfo->save();
 
                 return response()->json([
-                    'success' => 'user created'
-                ]);
+                    'success' => true,
+                    'message' => 'User created successfully',
+                    'data' =>   $user,
+
+                ], 201); // 201 = Created
+
             }
 
             // Payment failed or canceled
