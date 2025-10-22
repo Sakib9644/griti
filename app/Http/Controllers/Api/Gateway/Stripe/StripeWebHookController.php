@@ -77,7 +77,7 @@ class StripeWebHookController extends Controller
     } catch (\Exception $e) {
         return response('Invalid payload', 400);
     }
-    Log::info("invoice:{ $event }");
+    Log::info("invoice:".$event->data->object->type);
 
     if ($event->type === 'invoice.payment_succeeded') {
         $invoice = $event->data->object;
