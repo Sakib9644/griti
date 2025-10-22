@@ -107,6 +107,7 @@ class StripeCallBackController extends Controller
                 ]],
                 'mode' => 'subscription',
                 'subscription_data' => [
+                    'trial_period_days' => 1,
                 ],
                 'metadata' => $metadata, // ✅ attach here for subscription
 
