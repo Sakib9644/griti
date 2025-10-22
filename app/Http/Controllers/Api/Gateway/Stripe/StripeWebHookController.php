@@ -82,7 +82,7 @@ public function webhook(Request $request)
 
     // Safely get subscription ID from different possible locations
     $subscriptionId = $invoice->subscription
-        ?? $invoice->parent->subscription_details->subscription;
+        ?? $invoice->parent->subscription_item_details->subscription;
 
 
     Log::info('Subscription ID received in webhook: ' . ($subscriptionId ?? 'none'));
