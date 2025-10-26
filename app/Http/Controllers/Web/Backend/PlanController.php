@@ -99,43 +99,53 @@ class PlanController extends Controller
         return view('backend.layouts.plans.edit', compact('plan'));
     }
 
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'price' => 'required|integer|min:0',
-            'interval' => 'required|string|in:day,week,month,year',
+   public function update(Request $request, $id)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'price' => 'required|integer|min:0',
+        'interval' => 'required|string|in:day,week,month,year',
+    ]);
+
+    try {
+        $plan = Plan::findOrFail($id);
+
+        // Update product on Stripe
+        if ($plan->stripe_product_id) {
+            $product = \Stripe\Product::retrieve($plan->stripe_product_id);
+            $product->name = $request->name;
+            $product->save();
+        }
+
+        // Create a new price on Stripe
+        $stripePrice = \Stripe\Price::create([
+            'product' => $plan->stripe_product_id,
+            'unit_amount' => $request->price * 100,
+            'currency' => 'usd',
+            'recurring' => ['interval' => $request->interval],
         ]);
 
-        try {
-            $plan = Plan::findOrFail($id);
+        // Update database record
+        $plan->update([
+            'name' => $request->name,
+            'stripe_price_id' => $stripePrice->id,
+            'price' => $request->price,
+            'interval' => $request->interval,
+        ]);
 
-            if ($plan->stripe_product_id) {
-                $product = \Stripe\Product::retrieve($plan->stripe_product_id);
-                $product->name = $request->name;
-                $product->save();
-            }
+        return redirect()->route('subscriptions-plans.index')
+            ->with('success', 'Plan updated successfully.');
+    } catch (\Exception $e) {
+        // Log the error for debugging
+        Log::error('Plan update failed: ' . $e->getMessage());
 
-            $stripePrice = \Stripe\Price::create([
-                'product' => $plan->stripe_product_id,
-                'unit_amount' => $request->price * 100,
-                'currency' => 'usd',
-                'recurring' => ['interval' => $request->interval],
-            ]);
-
-            // Update database record
-            $plan->name = $request->name;
-            $plan->stripe_price_id = $stripePrice->id;
-            $plan->price = $request->price;
-            $plan->interval = $request->interval;
-            $plan->save();
-
-            return redirect()->route('subscriptions-plans.index')->with('success', 'Plan updated successfully.');
-        } catch (\Exception $e) {
-            Log::error('Plan update failed: ' . $e->getMessage());
-            return redirect()->back()->withInput()->withErrors('Failed to update plan: ' . $e->getMessage());
-        }
+        // Show error message in UI
+        return redirect()
+            ->back()
+            ->withInput()
+            ->with('t-error', '❌ Failed to update plan: ' . $e->getMessage());
     }
+}
 
 
     public function destroy($id)
