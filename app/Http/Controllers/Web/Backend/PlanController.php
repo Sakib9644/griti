@@ -103,7 +103,7 @@ class PlanController extends Controller
 {
     $request->validate([
         'name' => 'required|string|max:255',
-        'price' => 'required|integer|min:0',
+        'price' => 'required|min:0',
         'interval' => 'required|string|in:day,week,month,year',
     ]);
 
