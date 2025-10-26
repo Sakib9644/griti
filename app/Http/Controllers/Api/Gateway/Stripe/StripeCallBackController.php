@@ -61,7 +61,6 @@ class StripeCallBackController extends Controller
             // ✅ Fetch the plan from DB
             $plan = \App\Models\Plan::findOrFail(2);
 
-            // Check if email exists
             $existingUser = \App\Models\User::where('email', $data['email'])->first();
             if ($existingUser) {
                 return Helper::jsonResponse(false, 'Email already exists', 409);
