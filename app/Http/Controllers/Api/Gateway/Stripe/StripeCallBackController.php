@@ -182,12 +182,11 @@ class StripeCallBackController extends Controller
 
                 $userInfo->save();
 
-                return response()->json([
+                 return response()->json([
                     'success' => true,
                     'message' => 'User created successfully',
-                    'data' =>   $user,
-
-                ], 201); // 201 = Created
+                    'data' => $user,
+               ], 201);
 
             }
 
