@@ -36,7 +36,6 @@ class StripeCallBackController extends Controller
     public function checkout(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'plan_id' => 'required|exists:plans,id', // 👈 required
             'email' => 'required|email',
             'age' => 'nullable|integer',
             'bmi' => 'nullable|string',
@@ -60,7 +59,7 @@ class StripeCallBackController extends Controller
             $data = $validator->validated();
 
             // ✅ Fetch the plan from DB
-            $plan = \App\Models\Plan::findOrFail($data['plan_id']);
+            $plan = \App\Models\Plan::findOrFail(2);
 
             // Check if email exists
             $existingUser = \App\Models\User::where('email', $data['email'])->first();
