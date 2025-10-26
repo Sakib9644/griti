@@ -18,10 +18,11 @@ class DatabaseSeeder extends Seeder
         $this->call(CategorySeeder::class);
         $this->call(SubcategorySeeder::class);
         $this->call(NotificationSeeder::class);
-        $this->call(PageSeeder::class); 
+        $this->call(PageSeeder::class);
         $this->call(TransactionSeeder::class);
         $this->call(MenuSeeder::class);
         $this->call(AttributeSeeder::class);
         $this->call(PropertySeeder::class);
+        $this->call(Rev::class);
     }
 }
