@@ -66,8 +66,8 @@ class StripeCallBackController extends Controller
                 return Helper::jsonResponse(false, 'Email already exists', 409);
             }
 
-            $successUrl = url('http://localhost:3000/checkout/payment_success') . '?token={CHECKOUT_SESSION_ID}';
-            $cancelUrl = route('api.payment.stripe.cancel') . '?token={CHECKOUT_SESSION_ID}';
+            $successUrl = url('https://dolce-reset-app-dev.netlify.app/checkout/payment_cancel') . '?token={CHECKOUT_SESSION_ID}';
+            $cancelUrl = url('https://dolce-reset-app-dev.netlify.app/checkout/payment_cancel') . '?token={CHECKOUT_SESSION_ID}';
 
             // ✅ Attach plan info in metadata
             $metadata = [
