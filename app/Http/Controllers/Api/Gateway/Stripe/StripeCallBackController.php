@@ -129,11 +129,11 @@ class StripeCallBackController extends Controller
 
    public function success(Request $request)
 {
-    $request->validate([
-        'token' => ['required', 'string'],
-    ]);
 
     try {
+        $request->validate([
+            'token' => 'required|string',
+        ]);
         // Retrieve Stripe session
         $session = \Stripe\Checkout\Session::retrieve($request->token);
         $metadata = $session->metadata ?? [];
