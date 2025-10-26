@@ -127,75 +127,87 @@ class StripeCallBackController extends Controller
 
 
 
-    public function success(Request $request)
-    {
-        $validatedData = $request->validate([
-            'token' => ['required', 'string'],
-        ]);
+   public function success(Request $request)
+{
+    $request->validate([
+        'token' => ['required', 'string'],
+    ]);
 
-        try {
-            // Retrieve Stripe session
-            $session = \Stripe\Checkout\Session::retrieve($validatedData['token']);
+    try {
+        // Retrieve Stripe session
+        $session = \Stripe\Checkout\Session::retrieve($request->token);
+        $metadata = $session->metadata ?? [];
+        $email = $metadata['email'] ?? null;
 
-
-
-
-                // Collect metadata safely
-                $metadata = $session->metadata ?? [];
-
-                $email = $metadata['email'];
-                $password = Str::random(10);
-                // 1. Create a new user using save()
-                $user = new User();
-                $user->name = $metadata['name'] ?? 'User ' . Str::random(4);
-                $user->slug = Str::slug($metadata['name'] ?? 'user-' . Str::random(4)) . '-' . Str::random(4);
-                $user->email = $metadata['email'] ?? $email;
-                $user->password = Hash::make($metadata['password'] ?? $password);
-                $user->otp_verified_at =  now();
-                $user->status = 'active';
-                $user->save();
-
-
-                Mail::to($user->email)->send(new UserCredntilasMail($email, $password, route('login')));
-
-
-                $userInfo = new UserInfo();
-                $userInfo->user_id = $user->id;
-                $userInfo->age = $metadata['age'] ?? null;
-                $userInfo->bmi = $metadata['bmi'] ?? null;
-                $userInfo->body_part_focus = $metadata['body_part_focus'] ?? null;
-                $userInfo->body_satisfaction = $metadata['body_satisfaction'] ?? null;
-                $userInfo->celebration_plan = $metadata['celebration_plan'] ?? null;
-                $userInfo->current_body_type = $metadata['current_body_type'] ?? null;
-                $userInfo->current_weight = $metadata['current_weight'] ?? null;
-                $userInfo->dream_body = $metadata['dream_body'] ?? null;
-                $userInfo->height = $metadata['height'] ?? null;
-                $userInfo->target_weight = $metadata['target_weight'] ?? null;
-                $userInfo->trying_duration = $metadata['trying_duration'] ?? null;
-                $userInfo->urgent_improvement = $metadata['urgent_improvement'] ?? null;
-                $userInfo->price = $metadata['price'] ?? null;
-                $userInfo->payment_status = 'trail';
-                $userInfo->subscription_id = $session->subscription; // 👈 save Stripe subscription ID
-
-                $userInfo->save();
-
-                 return response()->json([
-                    'success' => true,
-                    'message' => 'User created successfully',
-                    'data' => $user,
-               ], 201);
-
-
-            // Payment failed or canceled
-            return redirect()->to($this->redirectFail);
-        } catch (\Stripe\Exception\ApiErrorException $e) {
-            Log::error($e->getMessage());
-            return redirect()->to($this->redirectFail);
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return redirect()->to($this->redirectFail);
+        if (!$email) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email not found in session metadata',
+            ], 400);
         }
+
+        // Check if user already exists
+        $existingUser = User::where('email', $email)->first();
+        if ($existingUser) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User already exists',
+            ], 200);
+        }
+
+        // Create new user
+        $password = Str::random(10);
+        $user = new User();
+        $user->name = $metadata['name'] ?? 'User ' . Str::random(4);
+        $user->slug = Str::slug($metadata['name'] ?? 'user-' . Str::random(4)) . '-' . Str::random(4);
+        $user->email = $email;
+        $user->password = Hash::make($metadata['password'] ?? $password);
+        $user->otp_verified_at = now();
+        $user->status = 'active';
+        $user->save();
+
+        // Optionally send credentials email
+        Mail::to($user->email)->send(new UserCredntilasMail($email, $password, route('login')));
+
+        // Create user info
+        $userInfo = new UserInfo();
+        $userInfo->user_id = $user->id;
+        $userInfo->age = $metadata['age'] ?? null;
+        $userInfo->bmi = $metadata['bmi'] ?? null;
+        $userInfo->body_part_focus = $metadata['body_part_focus'] ?? null;
+        $userInfo->body_satisfaction = $metadata['body_satisfaction'] ?? null;
+        $userInfo->celebration_plan = $metadata['celebration_plan'] ?? null;
+        $userInfo->current_body_type = $metadata['current_body_type'] ?? null;
+        $userInfo->current_weight = $metadata['current_weight'] ?? null;
+        $userInfo->dream_body = $metadata['dream_body'] ?? null;
+        $userInfo->height = $metadata['height'] ?? null;
+        $userInfo->target_weight = $metadata['target_weight'] ?? null;
+        $userInfo->trying_duration = $metadata['trying_duration'] ?? null;
+        $userInfo->urgent_improvement = $metadata['urgent_improvement'] ?? null;
+        $userInfo->price = $metadata['price'] ?? null;
+        $userInfo->payment_status = 'trial';
+        $userInfo->subscription_id = $session->subscription ?? null;
+        $userInfo->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User created successfully',
+            'data' => [
+                'user' => $user,
+                'user_info' => $userInfo,
+            ]
+        ], 201);
+
+    } catch (\Exception $e) {
+        Log::error($e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Server error',
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
+
 
     public function failure(Request $request)
     {
