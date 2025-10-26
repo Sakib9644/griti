@@ -134,7 +134,7 @@ class PlanController extends Controller
         ]);
 
         return redirect()->route('subscriptions-plans.index')
-            ->with('success', 'Plan updated successfully.');
+            ->with('t-success', 'Plan updated successfully.');
     } catch (\Exception $e) {
         // Log the error for debugging
         Log::error('Plan update failed: ' . $e->getMessage());
