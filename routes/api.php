@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\Frontend\SocialLinksController;
 use App\Http\Controllers\Api\Frontend\SubscriberController;
 use App\Http\Controllers\Api\Gateway\Stripe\StripeCallBackController;
 use App\Http\Controllers\Api\PlaninfoController;
+use App\Http\Controllers\Api\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -140,6 +141,9 @@ Route::prefix('barcode')->name('barcode')->group(function () {
 
 Route::prefix('plans')->name('barcode')->group(function () {
     Route::get('/', [PlaninfoController::class, 'index']);
+});
+Route::prefix('reviews')->name('barcode')->group(function () {
+    Route::get('/', [ReviewController::class, 'index']);
 });
 
 

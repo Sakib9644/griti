@@ -14,4 +14,9 @@ class CReview extends Model
         'image',
         'user_id',
     ];
+
+    public function getImageAttribute($image){
+
+        return $image ? url($image) : null;
+    }
 }
