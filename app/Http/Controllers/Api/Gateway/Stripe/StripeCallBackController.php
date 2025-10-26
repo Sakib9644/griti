@@ -139,7 +139,6 @@ class StripeCallBackController extends Controller
 
 
 
-            if ($session->payment_status === 'paid') {
 
                 // Collect metadata safely
                 $metadata = $session->metadata ?? [];
@@ -186,7 +185,6 @@ class StripeCallBackController extends Controller
                     'data' => $user,
                ], 201);
 
-            }
 
             // Payment failed or canceled
             return redirect()->to($this->redirectFail);
