@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Auth\SocialLoginController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Web\Backend\PlanController;
 use App\Http\Controllers\Web\Frontend\AffiliateController;
 use App\Http\Controllers\Web\Frontend\ContactController;
@@ -39,6 +40,7 @@ Route::get('migrate', function () {
     return 'Database migrated successfully!';
 });
 Route::resource('subscriptions-plans', PlanController::class);
+Route::resource('reviews', ReviewController::class);
 
 require __DIR__.'/auth.php';
 require __DIR__.'/api-stripe.php';
