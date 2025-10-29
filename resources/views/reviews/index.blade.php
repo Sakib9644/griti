@@ -30,7 +30,7 @@
                             <tbody>
                                 @foreach ($reviews as $review)
                                     <tr>
-                                        <td>{{ $review->id }}</td>
+                                        <td>{{ $loop->iteration }}</td>
                                         <td>{{ $review->title }}</td>
                                         <td>
                                             <div style="max-width: 900px; word-wrap: break-word; white-space: normal;">
