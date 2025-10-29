@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\UserInfo;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -65,9 +66,10 @@ class StripeCallBackController extends Controller
             if ($existingUser) {
                 return Helper::jsonResponse(false, 'Email already exists', 409);
             }
-
+           $uniqueToken = uniqid('cancel_', true);
+            $encryptedToken = Crypt::encryptString($uniqueToken);
             $successUrl = url('https://dolce-reset-app-dev.netlify.app/checkout/payment_success') . '?token={CHECKOUT_SESSION_ID}';
-            $cancelUrl = url('https://dolce-reset-app-dev.netlify.app/checkout/payment_cancel') . '?token={CHECKOUT_SESSION_ID}';
+            $cancelUrl  = 'https://dolce-reset-app-dev.netlify.app/checkout/payment_cancel?token=' . urlencode($encryptedToken);
 
             // ✅ Attach plan info in metadata
             $metadata = [
@@ -145,7 +147,7 @@ class StripeCallBackController extends Controller
                 'message' => 'Email not found in session metadata',
             ], 400);
         }
-        
+
         // Check if user already exists
         $existingUser = User::where('email', $email)->first();
         if ($existingUser) {
