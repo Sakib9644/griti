@@ -14,6 +14,9 @@ jobs:
       - name: FTP-Deploy-Action
         uses: SamKirkland/FTP-Deploy-Action@4.3.0
         with:
-          server: 146.63.205.92.host.secureserver.net
-          username: dolceresetapp@backend.dolceresetapp.online
-          password: "5OipIT=Iq5oWVg0q"
+          server: ftp.softvencefsd.xyz
+          username: griti@griti.softvencefsd.xyz
+          password: "aJ9SjJxrcUVQC3nm3T0g"
+          # server: 146.63.205.92.host.secureserver.net
+          # username: dolceresetapp@backend.dolceresetapp.online
+          # password: "5OipIT=Iq5oWVg0q"

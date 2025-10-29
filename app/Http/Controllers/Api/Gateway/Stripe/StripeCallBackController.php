@@ -96,18 +96,18 @@ class StripeCallBackController extends Controller
                 $metadata[$key] = $value ?? '';
             }
 
-            // ✅ Create Stripe Checkout session for subscription
+
             $session = \Stripe\Checkout\Session::create([
                 'payment_method_types' => ['card'],
                 'line_items' => [[
-                    'price' => $plan->stripe_price_id, // 👈 dynamic from DB
+                    'price' => $plan->stripe_price_id,
                     'quantity' => 1,
                 ]],
                 'mode' => 'subscription',
                 'subscription_data' => [
                     'trial_period_days' => 3,
                 ],
-                'metadata' => $metadata, // ✅ attach here for subscription
+                'metadata' => $metadata,
 
                 'success_url' => $successUrl,
                 'cancel_url' => $cancelUrl,
@@ -145,7 +145,7 @@ class StripeCallBackController extends Controller
                 'message' => 'Email not found in session metadata',
             ], 400);
         }
-
+        
         // Check if user already exists
         $existingUser = User::where('email', $email)->first();
         if ($existingUser) {
