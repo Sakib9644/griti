@@ -84,42 +84,38 @@ public function webhook(Request $request)
         'id' => $event->id
     ]);
 
-    switch ($event->type) {
-        case 'invoice.payment_succeeded':
-            $invoice = $event->data->object;
+    // Only process invoice payment succeeded events
+    if ($event->type === 'invoice.payment_succeeded') {
+        $invoice = $event->data->object;
 
-            $subscriptionId = $invoice->subscription ?? null;
+        Log::info('Invoice payment succeeded received: ', ['invoice_id' => $invoice->id]);
 
-            if ($subscriptionId) {
-                $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
+        $subscriptionId = $this->getSubscriptionIdFromInvoice($invoice);
 
-                if ($userInfo) {
-                    $userInfo->payment_status = 'paid';
-                    $userInfo->save();
-                    Log::info("Payment marked as PAID for subscription: {$subscriptionId}");
-                } else {
-                    Log::warning("No user info found for subscription: {$subscriptionId}");
-                }
+        Log::info('Subscription ID received in webhook: ' . ($subscriptionId ?? 'none'));
+
+        if ($subscriptionId) {
+            $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
+
+            if ($userInfo) {
+                $userInfo->payment_status = 'paid';
+                $userInfo->save();
+                Log::info("Payment marked as PAID for subscription: {$subscriptionId}");
             } else {
-                Log::warning("No subscription ID found in invoice object", [
-                    'invoice_id' => $invoice->id,
-                    'billing_reason' => $invoice->billing_reason ?? 'unknown'
-                ]);
+                Log::warning("No user info found for subscription: {$subscriptionId}");
             }
-            break;
-
-        case 'customer.subscription.created':
-        case 'customer.subscription.updated':
-            // Optional: handle subscription events if needed
-            Log::info("Subscription event received: {$event->type}");
-            break;
-
-        default:
-            Log::info('Unhandled Stripe event type', [
-                'type' => $event->type,
-                'id' => $event->id
+        } else {
+            Log::warning("No subscription ID found in invoice object", [
+                'invoice_id' => $invoice->id,
+                'billing_reason' => $invoice->billing_reason ?? 'unknown'
             ]);
-            break;
+        }
+    } else {
+        // Log other event types for debugging but don't process them
+        Log::info('Other Stripe event type received (not processed)', [
+            'type' => $event->type,
+            'id' => $event->id
+        ]);
     }
 
     return response('Webhook handled', 200);

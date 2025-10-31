@@ -49,29 +49,25 @@ class StripeCallBackController extends Controller
 
         try {
 
-
-            // Check if user exists by email
             $user = User::where('email', $request->email)->first();
 
-            // dd($user);
-
             if ($user) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'User already exists.'
-                ], 409);
+                UserInfo::where('user_id', $user->id)->delete();
             } else {
-                $password = Str::random(8); // generates 8-character random string like "aB3dE7kL"
-
                 $user = new User();
-                $user->name = $metadata['name'] ?? 'User ' . Str::random(1);
-                $user->slug = Str::slug($metadata['name'] ?? 'user-' . Str::random(4)) . '-' . Str::random(4);
-                $user->email = $request->email;
-                $user->password = Hash::make($metadata['password'] ?? $password);
-                $user->otp_verified_at = now();
-                $user->status = 'active';
-                $user->save();
             }
+
+            $password = Str::random(8);
+
+            // ✅ Update or create user info safely
+            $user->name = $metadata['name'] ?? 'User ' . Str::random(11);
+            $user->slug = Str::slug($metadata['name'] ?? 'user-' . Str::random(4)) . '-' . Str::random(4);
+            $user->email = $request->email;
+            $user->password = Hash::make($metadata['password'] ?? $password);
+            $user->otp_verified_at = now();
+            $user->status = 'active';
+            $user->save();
+
 
 
 
@@ -138,6 +134,8 @@ class StripeCallBackController extends Controller
             ], 404);
         }
 
+        // Initialize userInfo variable
+
         try {
             \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
 
@@ -153,14 +151,39 @@ class StripeCallBackController extends Controller
             // 3️⃣ Attach the payment method to the user
             $user->updateDefaultPaymentMethod($request->payment_method);
 
-            // 4️⃣ Create subscription with trial
+
+            $subscription = $user->subscription('default');
+
+            if ($subscription && $subscription->valid()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You already have an active subscription.'
+                ], 400);
+            }
+
+            if ($subscription && $subscription->cancelled() && ! $subscription->ended()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You have cancelled your plan. You can resubscribe after the current period ends.'
+                ], 400);
+            }
+
             $subscription = $user->newSubscription('default', $plan->stripe_price_id)
                 ->trialDays(3)
                 ->create($request->payment_method);
 
 
-            $userInfo = new UserInfo();
-            $userInfo->user_id = $user->id;
+            $userInfo = UserInfo::where('user_id', $user->id)->first();
+
+            if (!$userInfo) {
+                $userInfo = new UserInfo();
+                $userInfo->user_id = $user->id;
+                $userInfo->subscription_id = $subscription->stripe_id ?? null;
+            } else {
+                $userInfo->subscription_id = $userInfo->subscription_id ?? $subscription->stripe_id ?? null;
+            }
+
+            // Set or update other fields (same for both cases)
             $userInfo->price = $plan->price;
             $userInfo->age = $metadata['age'] ?? null;
             $userInfo->bmi = $metadata['bmi'] ?? null;
@@ -175,10 +198,13 @@ class StripeCallBackController extends Controller
             $userInfo->trying_duration = $metadata['trying_duration'] ?? null;
             $userInfo->urgent_improvement = $metadata['urgent_improvement'] ?? null;
             $userInfo->payment_status = 'trial';
-            $userInfo->subscription_id = $subscription->stripe_id ?? null;
+
+            // Save the record
             $userInfo->save();
 
-            // 6️⃣ Send user credentials email
+
+
+
             Mail::to($user->email)->send(new UserCredntilasMail($user->email, $request->password, route('login')));
 
             return response()->json([
@@ -187,17 +213,13 @@ class StripeCallBackController extends Controller
                 'data' => $subscription
             ], 200);
         } catch (\Exception $e) {
-            \Log::error($e->getMessage());
+            \Log::error("Subscription creation failed: " . $e->getMessage());
 
-            // Delete user if subscription creation fails
-            try {
-            } catch (\Exception $deleteEx) {
-                \Log::error("Failed to delete user after subscription failure: " . $deleteEx->getMessage());
-            }
+
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to create subscription, user deleted',
+                'message' => 'Failed to create subscription, user and info deleted',
                 'details' => $e->getMessage()
             ], 500);
         }
