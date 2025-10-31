@@ -17,4 +17,5 @@ class categoryController extends Controller
         return Helper::jsonResponse(true, 'Category', 200, $data);
 
     }
+    
 }

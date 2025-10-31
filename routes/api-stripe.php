@@ -16,7 +16,8 @@ Route::prefix('api')->name('api.')->group(function () {
 
     //stripe callback
     Route::controller(StripeCallBackController::class)->prefix('payment/stripe')->name('payment.stripe.')->group(function () {
-        Route::post('/checkout', 'checkout');
+        Route::post('/checkout', 'createIntent');
+        Route::post('/trail', 'subscribeWithTrial');
         Route::POST('/success', 'success')->name('success');
         Route::get('/cancel', 'failure')->name('cancel');
     });
