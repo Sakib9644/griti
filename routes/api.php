@@ -73,7 +73,6 @@ Route::group(['middleware' => 'guest:api'], function ($router) {
     Route::post('/verify-otp', [RegisterController::class, 'VerifyEmail']);
     //login
     Route::post('login', [LoginController::class, 'login'])->name('api.login');
-    //forgot password
     Route::post('/forget-password', [ResetPasswordController::class, 'forgotPassword']);
     Route::post('/otp-token', [ResetPasswordController::class, 'MakeOtpToken']);
     Route::post('/reset-password', [ResetPasswordController::class, 'ResetPassword']);
