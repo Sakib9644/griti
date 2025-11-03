@@ -29,7 +29,10 @@ class LoginController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return Helper::jsonResponse(false, 'Validation failed', 422, $validator->errors());
+                return Helper::jsonResponse(
+                false,
+                'Validation failed', 422,
+                $validator->errors());
             }
 
             $user = User::where('email', $request->email);
@@ -44,14 +47,15 @@ class LoginController extends Controller
                 return Helper::jsonResponse(false, 'user is not active', 404);
             }
 
-            //! Check the password
             if (!Hash::check($request->password, $user->password)) {
                 return Helper::jsonResponse(false, 'Invalid password', 401);
             }
 
-            //? Check if the email is verified before login is successful
             if (!$user->otp_verified_at) {
-                return Helper::jsonResponse(false, 'Email not verified. Please verify your email before logging in.', 403, ['is_otp_verified' => $user->isOtpVerified]);
+                return Helper::jsonResponse(
+                false,
+                'Email not verified. Please verify your email before logging in.', 403,
+                 ['is_otp_verified' => $user->isOtpVerified]);
             }else{
                 $user->update([
                     'otp'            => null,

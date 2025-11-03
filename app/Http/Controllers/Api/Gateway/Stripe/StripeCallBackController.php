@@ -125,7 +125,7 @@ class StripeCallBackController extends Controller
         ]);
 
         $user = User::findOrFail($request->user_id);
-        $plan = \App\Models\Plan::find(2);
+        $plan = \App\Models\Plan::find(1);
 
         if (!$plan) {
             return response()->json([
