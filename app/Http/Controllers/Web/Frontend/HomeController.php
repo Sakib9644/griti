@@ -11,6 +11,7 @@ use App\Models\CMS;
 use App\Models\Post;
 use App\Models\Product;
 use App\Models\SocialLink;
+use App\Models\User;
 use Modules\Portfolio\Models\Project;
 use Modules\Portfolio\Models\Type;
 use App\Traits\CMSData;
@@ -21,25 +22,9 @@ class HomeController extends Controller
     public function index()
     {
         //CMS Data
-        $cmsData = CMSData::all();
-        $cms = [
-            'home' => $cmsData->where('page', PageEnum::HOME),
-            'common' => $cmsData->where('page', PageEnum::COMMON),
-        ];
 
         //social links
-        $socials = Cache::rememberForever(CacheEnum::CMS_SOCIAL_LINKS, function () {
-            return SocialLink::where('status', 'active')->get();
-        });
-        
-        $posts = Post::with(['category', 'subcategory', 'user', 'images'])->where('status', 'active')->latest()->limit(3)->get();
-
-        $types = Type::where('status', 'active')->get();
-        $projects = Project::where('status', 'active')->get();
-
-        $products = Product::with(['category', 'user'])->where('status', 'active')->get();
-
-        return view('frontend.layouts.home.index', compact('cms', 'posts', 'types', 'projects', 'products', 'socials'));
+        return view('auth.login');
     }
 
     public function post($slug){
@@ -50,4 +35,12 @@ class HomeController extends Controller
         $post = Post::where('slug', base64_decode($slug))->where('status', 'active')->firstOrFail();
         return view('frontend.layouts.post', compact('cms', 'post'));
     }
+    public function user(){
+
+        $users = User::latest()->paginate(10);
+
+        return view('backend.layouts.UserDetails.index', compact('users'));
+    }
+
+
 }

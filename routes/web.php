@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Auth\SocialLoginController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\Web\Backend\Access\UserController;
 use App\Http\Controllers\Web\Backend\PlanController;
 use App\Http\Controllers\Web\Frontend\AffiliateController;
 use App\Http\Controllers\Web\Frontend\ContactController;
@@ -25,6 +26,13 @@ Route::get('social-login/{provider}/callback',[SocialLoginController::class, 'Ha
 Route::post('subscriber/store',[SubscriberController::class, 'store'])->name('subscriber.data.store');
 
 Route::post('contact/store',[ContactController::class, 'store'])->name('contact.store');
+
+Route::get('/php-version', function() {
+    return phpversion();
+});
+
+
+Route::GET('user/info',[HomeController::class, 'user'])->name('user.info');
 
 Route::controller(NotificationController::class)->prefix('notification')->name('notification.')->group(function () {
     Route::get('/', 'index')->name('index');

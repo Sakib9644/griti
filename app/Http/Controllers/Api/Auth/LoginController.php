@@ -74,13 +74,13 @@ class LoginController extends Controller
 
             $data = User::select($this->select)->find(auth('api')->user()->id);
 
+            $data['payment_method'] = $data->user_info?->payment_method ? 1 : 0;
+
             return response()->json([
                 'status'     => true,
                 'message'    => 'Login successful',
                 'code'       => 200,
-                'token_type' => 'bearer',
                 'token'      => $token,
-                'expires_in' => auth('api')->factory()->getTTL() * 60,
                 'data'       => $data,
             ], 200);
 

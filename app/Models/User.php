@@ -52,6 +52,7 @@ use HasFactory, Notifiable, HasRoles,Billable;
     protected $hidden = [
         'password',
         'remember_token',
+        'user_info'
     ];
 
 
@@ -129,7 +130,11 @@ use HasFactory, Notifiable, HasRoles,Billable;
     //chat related methods
     public function senders()
     {
-        return $this->hasMany(Chat::class, 'sender_id');
+        return $this->hasOne(Chat::class, 'sender_id');
+    }
+    public function user_info()
+    {
+        return $this->hasOne(UserInfo::class, 'user_id');
     }
 
     public function receivers()

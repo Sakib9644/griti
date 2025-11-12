@@ -158,9 +158,13 @@ class RegisterController extends Controller
                 'status'     => true,
                 'message'    => 'Email verification successful',
                 'code'       => 200,
-                'token_type' => 'bearer',
-                'expires_in' => auth('api')->factory()->getTTL() * 60,
-                'token' =>  $token
+                'token' =>  $token,
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+
+                ]
             ], 200);
         } catch (Exception $e) {
             return Helper::jsonErrorResponse($e->getMessage(), $e->getCode());
@@ -194,7 +198,15 @@ class RegisterController extends Controller
             //* Send the new OTP to the user's email
             Mail::to($user->email)->send(new OtpMail($newOtp, $user, 'Verify Your Email Address'));
 
-            return Helper::jsonResponse(true, 'A new OTP has been sent to your email.', 200);
+            return response()->json(
+                [
+                    'success' => true,
+                    'message' => 'A new OTP has been sent to your email',
+                    'otp' =>  $newOtp,
+                   'code' => 200,
+
+                ]
+            );
         } catch (Exception $e) {
             return Helper::jsonErrorResponse($e->getMessage(), 200);
         }

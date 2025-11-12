@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\CircleController;
+use App\Http\Controllers\ThemeController;
+use App\Http\Controllers\VideoController;
 use App\Http\Controllers\Web\Backend\Access\PermissionController;
 use App\Http\Controllers\Web\Backend\Access\RoleController;
 use App\Http\Controllers\Web\Backend\Access\UserController;
@@ -82,6 +85,36 @@ Route::controller(CategoryController::class)->prefix('category')->name('category
     Route::post('/update/{id}', 'update')->name('update');
     Route::delete('/delete/{id}', 'destroy')->name('destroy');
     Route::get('/status/{id}', 'status')->name('status');
+});
+
+Route::controller(ThemeController::class)->prefix('theme')->name('theme.')->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::get('/create', 'create')->name('create');
+    Route::post('/store', 'store')->name('store');
+    Route::get('/show/{id}', 'show')->name('show');
+    Route::get('/edit/{id}', 'edit')->name('edit');
+    Route::post('/update/{id}', 'update')->name('update');
+    Route::delete('/delete/{id}', 'destroy')->name('destroy');
+    // Optional: if you have status toggle
+    // Route::get('/status/{id}', 'status')->name('status');
+});
+Route::controller(VideoController::class)->prefix('videos')->name('videos.')->group(function () {
+    Route::get('/', 'index')->name('index');               // List all videos
+    Route::get('/create', 'create')->name('create');       // Show create form
+    Route::post('/store', 'store')->name('store');         // Store new video
+    Route::get('/show/{id}', 'show')->name('show');       // Show single video (optional)
+    Route::get('/edit/{id}', 'edit')->name('edit');       // Show edit form
+    Route::put('/update/{id}', 'update')->name('update'); // Update existing video
+    Route::delete('/delete/{id}', 'destroy')->name('destroy'); // Delete video
+});
+
+Route::controller(CircleController::class)->prefix('circles')->name('circles.')->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::get('/create', 'create')->name('create');
+    Route::post('/store', 'store')->name('store');
+    Route::get('/edit/{id}', 'edit')->name('edit');
+    Route::PUT('/update/{id}', 'update')->name('update');
+    Route::delete('/delete/{id}', 'destroy')->name('destroy');
 });
 
 Route::controller(SubcategoryController::class)->prefix('subcategory')->name('subcategory.')->group(function () {
