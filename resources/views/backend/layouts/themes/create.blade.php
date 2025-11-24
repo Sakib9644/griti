@@ -39,34 +39,10 @@
                                     </div>
 
                                     <!-- Category -->
-                                    <div class="form-group">
-                                        <label for="category_id" class="form-label">Category:</label>
-                                        <select name="category_id" id="category_id" class="form-control @error('category_id') is-invalid @enderror">
-                                            <option value="">Select Category</option>
-                                            @foreach($categories as $category)
-                                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                                    {{ $category->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('category_id')
-                                            <span class="text-danger">{{ $message }}</span>
-                                        @enderror
-                                    </div>
+                               
 
                                     <!-- Type -->
-                                    <div class="form-group">
-                                        <label for="type" class="form-label">Type:</label>
-                                        <select name="type" id="type" class="form-control @error('type') is-invalid @enderror">
-                                            <option value="">Select Type</option>
-                                            <option value="beginner" {{ old('type') == 'beginner' ? 'selected' : '' }}>Beginner</option>
-                                            <option value="intermediate" {{ old('type') == 'intermediate' ? 'selected' : '' }}>Intermediate</option>
-                                            <option value="advance" {{ old('type') == 'advance' ? 'selected' : '' }}>Advance</option>
-                                        </select>
-                                        @error('type')
-                                            <span class="text-danger">{{ $message }}</span>
-                                        @enderror
-                                    </div>
+
 
                                     <!-- Image -->
                                     <div class="form-group">

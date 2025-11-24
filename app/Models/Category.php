@@ -19,6 +19,15 @@ class Category extends Model
         'updated_at',
     ];
 
+
+    public function getImageAttribute($value){
+
+
+        return $value ? url($value) : null;
+
+
+    }
+
     public function posts()
     {
         return $this->hasMany(Post::class);
@@ -31,5 +40,8 @@ class Category extends Model
 
     public function products() {
         return $this->hasMany(Product::class);
+    }
+    public function Theme() {
+        return $this->hasMany(Theme::class);
     }
 }

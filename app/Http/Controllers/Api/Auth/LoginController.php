@@ -30,9 +30,11 @@ class LoginController extends Controller
 
             if ($validator->fails()) {
                 return Helper::jsonResponse(
-                false,
-                'Validation failed', 422,
-                $validator->errors());
+                    false,
+                    'Validation failed',
+                    422,
+                    $validator->errors()
+                );
             }
 
             $user = User::where('email', $request->email);
@@ -53,10 +55,12 @@ class LoginController extends Controller
 
             if (!$user->otp_verified_at) {
                 return Helper::jsonResponse(
-                false,
-                'Email not verified. Please verify your email before logging in.', 403,
-                 ['is_otp_verified' => $user->isOtpVerified]);
-            }else{
+                    false,
+                    'Email not verified. Please verify your email before logging in.',
+                    403,
+                    ['is_otp_verified' => $user->isOtpVerified]
+                );
+            } else {
                 $user->update([
                     'otp'            => null,
                     'otp_expires_at' => null,
@@ -74,7 +78,17 @@ class LoginController extends Controller
 
             $data = User::select($this->select)->find(auth('api')->user()->id);
 
-            $data['payment_method'] = $data->user_info?->payment_method ? 1 : 0;
+
+            $data = [
+
+                'id' => $data->id,
+                'avatar' => $data->avatar,
+                'email' => $data->email,
+                'user_info' => $data->user_info ? 1 : 0,
+                'Payment_method' => $data->user_info?->payment_method ? 1 : 0,
+            ];
+
+
 
             return response()->json([
                 'status'     => true,
@@ -83,7 +97,6 @@ class LoginController extends Controller
                 'token'      => $token,
                 'data'       => $data,
             ], 200);
-
         } catch (Exception $e) {
             return Helper::jsonResponse(false, 'An error occurred during login.', 500, ['error' => $e->getMessage()]);
         }
@@ -107,5 +120,4 @@ class LoginController extends Controller
             'data' => auth('api')->user()
         ]);
     }
-
 }

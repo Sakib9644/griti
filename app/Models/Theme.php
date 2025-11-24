@@ -21,4 +21,17 @@ class Theme extends Model
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
+    public function videos()
+    {
+        return $this->hasMany(Video::class, 'theme_id');
+    }
+
+     public function getImageAttribute($value){
+
+
+        return $value ? url($value) : null;
+
+
+    }
+
 }

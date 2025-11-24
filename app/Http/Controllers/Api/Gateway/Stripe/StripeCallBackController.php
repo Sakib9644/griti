@@ -182,10 +182,10 @@ class StripeCallBackController extends Controller
             } else {
                 $userInfo->subscription_id = $userInfo->subscription_id ?? $subscription->stripe_id ?? null;
             }
-
+            $age = $metadata['age'] ?? null;
+            $userInfo->age = $age ? now()->subYears((int)$age)->toDateString() : null;
             // Set or update other fields (same for both cases)
             $userInfo->price = $plan->price;
-            $userInfo->age = $metadata['age'] ?? null;
             $userInfo->bmi = $metadata['bmi'] ?? null;
             $userInfo->body_part_focus = $metadata['body_part_focus'] ?? null;
             $userInfo->body_satisfaction = $metadata['body_satisfaction'] ?? null;
@@ -197,7 +197,6 @@ class StripeCallBackController extends Controller
             $userInfo->target_weight = $metadata['target_weight'] ?? null;
             $userInfo->trying_duration = $metadata['trying_duration'] ?? null;
             $userInfo->urgent_improvement = $metadata['urgent_improvement'] ?? null;
-            $userInfo->payment_status = 'trial';
 
             // Save the record
             $userInfo->save();
@@ -285,7 +284,6 @@ class StripeCallBackController extends Controller
             $userInfo->trying_duration = $metadata['trying_duration'] ?? null;
             $userInfo->urgent_improvement = $metadata['urgent_improvement'] ?? null;
             $userInfo->price = $metadata['price'] ?? null;
-            $userInfo->payment_status = 'trial';
             $userInfo->subscription_id = $session->subscription ?? null;
             $userInfo->save();
 

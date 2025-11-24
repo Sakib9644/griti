@@ -33,9 +33,7 @@
                         <thead>
                             <tr>
                                 <th>SN</th>
-                                <th>Category</th>
                                 <th>Name</th>
-                                <th>Type</th>
                                 <th>Image</th>
                                 <th>Action</th>
                             </tr>
@@ -44,9 +42,7 @@
                             @forelse($themes as $key => $theme)
                             <tr>
                                 <td>{{ $key + 1 }}</td>
-                                <td>{{ $theme->category->name ?? '-' }}</td>
                                 <td>{{ $theme->name }}</td>
-                                <td>{{ ucfirst($theme->type) }}</td>
                                 <td>
                                     @if($theme->image)
                                         <img src="{{ asset($theme->image) }}" alt="Theme Image" width="60">

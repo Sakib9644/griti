@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CircleController;
+use App\Http\Controllers\MusicController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\VideoController;
 use App\Http\Controllers\Web\Backend\Access\PermissionController;
@@ -43,6 +44,7 @@ use App\Http\Controllers\Web\Backend\SubcategoryController;
 use App\Http\Controllers\Web\Backend\SubscriberController;
 use App\Http\Controllers\Web\Backend\TemplateEmailController;
 use App\Http\Controllers\Web\Backend\TransactionController;
+use App\Http\Controllers\WorkoutVideosController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
@@ -98,7 +100,7 @@ Route::controller(ThemeController::class)->prefix('theme')->name('theme.')->grou
     // Optional: if you have status toggle
     // Route::get('/status/{id}', 'status')->name('status');
 });
-Route::controller(VideoController::class)->prefix('videos')->name('videos.')->group(function () {
+Route::controller(VideoController::class)->prefix('Work-Out')->name('videos.')->group(function () {
     Route::get('/', 'index')->name('index');               // List all videos
     Route::get('/create', 'create')->name('create');       // Show create form
     Route::post('/store', 'store')->name('store');         // Store new video
@@ -423,4 +425,29 @@ Route::controller(CountryController::class)->prefix('country')->name('country.')
 
     Route::get('/import', 'import')->name('import');
     Route::get('/export', 'export')->name('export');
+});
+
+Route::controller(WorkoutVideosController::class)->prefix('workout-videos')->name('workout_videos.')->group(function () {
+    Route::get('/', 'index')->name('index');                 // List all workout videos
+    Route::get('/create', 'create')->name('create');         // Show create form
+    Route::post('/store', 'store')->name('store');           // Store new workout video
+    Route::get('/show/{id}', 'show')->name('show');         // Show a specific workout video
+    Route::get('/edit/{id}', 'edit')->name('edit');         // Show edit form
+    Route::PUT('/update/{id}', 'update')->name('update');  // Update a workout video
+    Route::delete('/delete/{id}', 'destroy')->name('destroy'); // Delete a workout video
+
+});
+Route::controller(MusicController::class)->prefix('music')->name('music.')->group(function () {
+
+    Route::get('/', 'index')->name('index');
+
+    Route::get('/create', 'create')->name('create');
+
+    Route::post('/store', 'store')->name('store');
+
+    Route::get('/edit/{id}', 'edit')->name('edit');
+
+    Route::put('/update/{id}', 'update')->name('update');
+
+    Route::delete('/delete/{id}', 'destroy')->name('destroy');
 });

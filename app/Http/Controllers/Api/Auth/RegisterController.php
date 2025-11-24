@@ -75,9 +75,9 @@ class RegisterController extends Controller
                 'email'              => $email,
                 'password'           => Hash::make($request->input('password')),
                 'otp'                => rand(1000, 9999),
-                'otp_expires_at'    => Carbon::now()->addMinutes(60),
+                'otp_expires_at'     => Carbon::now()->addMinutes(60),
                 'status'             => 'active',
-                'last_activity_at'  => Carbon::now()
+                'last_activity_at'   => Carbon::now()
             ]);
 
             DB::table('model_has_roles')->insert([

@@ -18,7 +18,7 @@ class OnboardingController extends Controller
         // Validate incoming data
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
-            'age' => 'nullable|integer',
+            'dob' => 'nullable|date',
             'bmi' => 'nullable|string',
             'body_part_focus' => 'nullable|string',
             'body_satisfaction' => 'nullable|string',
@@ -65,43 +65,41 @@ class OnboardingController extends Controller
                 'current_weight' => $request->current_weight,
                 'dream_body' => $request->dream_body,
                 'height' => $request->height,
+                'height_in' => $request->height_in,
+                'weight_in' => $request->weight_in,
                 'target_weight' => $request->target_weight,
+                'target_weight_in' => $request->target_weight_in,
                 'trying_duration' => $request->trying_duration,
                 'urgent_improvement' => $request->urgent_improvement,
                 'payment_status' => $request->payment_status ?? 'trial',
-                'subscription_id' => $request->subscription_id ?? null,
-                'signature' => url($signaturePath )?? null,
+                'signature' => $signaturePath ? url($signaturePath) : null,
                 'price' => 0,
             ]
         );
 
         $data = [
-
-
-                'age' => $userInfo->age,
-                'bmi' => $userInfo->bmi,
-                'body_part_focus' => $userInfo->body_part_focus,
-                'body_satisfaction' => $userInfo->body_satisfaction,
-                'celebration_plan' => $userInfo->celebration_plan,
-                'current_body_type' => $userInfo->current_body_type,
-                'current_weight' => $userInfo->current_weight,
-                'dream_body' => $userInfo->dream_body,
-                'height' => $userInfo->height,
-                'target_weight' => $userInfo->target_weight,
-                'trying_duration' => $userInfo->trying_duration,
-                'urgent_improvement' => $userInfo->urgent_improvement,
-                'payment_status' => $userInfo->payment_status ?? 'trial',
-                'subscription_id' => $userInfo->subscription_id ?? null,
-                'signature' => url($userInfo->signature )?? null,
-                // 'price' => 0,
-
-
+            'age' => $userInfo->age,
+            'bmi' => $userInfo->bmi,
+            'body_part_focus' => $userInfo->body_part_focus,
+            'body_satisfaction' => $userInfo->body_satisfaction,
+            'celebration_plan' => $userInfo->celebration_plan,
+            'current_body_type' => $userInfo->current_body_type,
+            'current_weight' => $userInfo->current_weight,
+            'current_weight_in' => $userInfo->weight_in,
+            'dream_body' => $userInfo->dream_body,
+            'height' => $userInfo->height,
+            'height_in' => $userInfo->height_in,
+            'target_weight' => $userInfo->target_weight,
+            'target_weight_in' => $userInfo->target_weight_in,
+            'trying_duration' => $userInfo->trying_duration,
+            'urgent_improvement' => $userInfo->urgent_improvement,
+            'signature' => $userInfo->signature ? url($userInfo->signature) : null,
         ];
 
         return response()->json([
             'status' => 'success',
             'message' => 'User info saved successfully',
-            'data' => $data ,
+            'data' => $data,
         ], 200);
     }
 }

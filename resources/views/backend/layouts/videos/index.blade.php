@@ -17,12 +17,13 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Theme</th>
                                 <th>Title</th>
+                                <th>Category</th>
+                                <th>Theme</th>
+                                <th>Training Level</th>
                                 <th>Calories</th>
                                 <th>Minutes</th>
                                 <th>Thumbnail</th>
-                                <th>Video</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -30,8 +31,10 @@
                             @forelse($videos as $key => $video)
                                 <tr>
                                     <td>{{ $key + 1 }}</td>
-                                    <td>{{ $video->theme->name ?? '-' }}</td>
                                     <td>{{ $video->title }}</td>
+                                    <td>{{ $video->category ? $video->category->name : '-' }}</td>
+                                    <td>{{ $video->theme ? $video->theme->name : '-' }}</td>
+                                    <td>{{ $video->type ?? '-' }}</td>
                                     <td>{{ $video->calories ?? '-' }}</td>
                                     <td>{{ $video->minutes ?? '-' }}</td>
                                     <td>
@@ -40,23 +43,18 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if($video->video)
-                                            <video width="120" controls>
-                                                <source src="{{ asset($video->video) }}" type="video/mp4">
-                                            </video>
-                                        @endif
-                                    </td>
-                                    <td>
                                         <a href="{{ route('admin.videos.edit', $video->id) }}" class="btn btn-sm btn-info">Edit</a>
                                         <form action="{{ route('admin.videos.destroy', $video->id) }}" method="POST" style="display:inline-block;">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this video?')">Delete</button>
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this Work-Out?')">Delete</button>
                                         </form>
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="8" class="text-center">No videos found.</td></tr>
+                                <tr>
+                                    <td colspan="9" class="text-center">No videos found.</td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>

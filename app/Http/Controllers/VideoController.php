@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Video;
 use App\Models\Theme;
+use App\Models\Category;
 use App\Models\Circle;
 use Illuminate\Http\Request;
 use App\Helpers\Helper;
@@ -15,7 +16,7 @@ class VideoController extends Controller
      */
     public function index()
     {
-        $videos = Video::with('theme', 'circles')->get();
+        $videos = Video::with('theme', 'category', 'circles')->get();
         return view('backend.layouts.videos.index', compact('videos'));
     }
 
@@ -25,100 +26,57 @@ class VideoController extends Controller
     public function create()
     {
         $themes = Theme::all();
-        return view('backend.layouts.videos.create', compact('themes'));
+        $categories = Category::all(); // Added
+        return view('backend.layouts.videos.create', compact('themes', 'categories'));
     }
 
     /**
      * Store a newly created video.
      */
-   // Store a newly created video
-public function store(Request $request)
+   public function store(Request $request)
 {
-    $request->validate([
-        'title' => 'required|string|max:255',
-        'theme_id' => 'required|exists:themes,id',
-        'video' => 'required',
-        'image' => 'nullable|file|mimes:jpeg,jpg,png|max:2048',
-        'description' => 'nullable|string',
-        'calories' => 'nullable|integer',
-        'minutes' => 'nullable|integer',
-    ]);
+    try {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'category_id' => 'nullable|exists:categories,id',
+            'theme_id' => 'nullable|exists:themes,id',
+            'type' => 'nullable|in:beginner,intermediate,advance',
+            'video' => 'nullable|file|mimes:mp4,mov,avi',
+            'image' => 'required|file|mimes:jpeg,jpg,png|max:2048',
+            'description' => 'nullable|string',
+            'calories' => 'nullable|integer',
+            'minutes' => 'nullable|integer',
+        ]);
 
-    $video = new Video();
-    $video->title = $request->title;
-    $video->theme_id = $request->theme_id;
-    $video->description = $request->description;
-    $video->calories = $request->calories;
-    $video->minutes = $request->minutes;
+        $video = new Video();
+        $video->title = $request->title;
+        $video->category_id = $request->category_id;
+        $video->theme_id = $request->theme_id;
+        $video->type = $request->type ;
+        $video->description = $request->description;
+        $video->calories = $request->calories;
+        $video->minutes = $request->minutes;
+        $video->video = "demo";
 
-    if ($request->hasFile('video')) {
-        $video->video = Helper::fileUpload(
-            $request->file('video'),
-            'videos',
-            time() . '_' . $request->file('video')->getClientOriginalName()
-        );
+
+        if ($request->hasFile('image')) {
+            $video->image = Helper::fileUpload(
+                $request->file('image'),
+                'video_images',
+                time() . '_' . $request->file('image')->getClientOriginalName()
+            );
+        }
+
+        $video->save();
+
+        return redirect()->route('admin.videos.index')->with('t-success', 'Video created successfully!');
+
+    } catch (\Exception $e) {
+        // Catch any error and redirect with t-error
+        return redirect()->back()->withInput()->with('t-error', 'Something went wrong: ' . $e->getMessage());
     }
-
-    if ($request->hasFile('image')) {
-        $video->image = Helper::fileUpload(
-            $request->file('image'),
-            'video_images',
-            time() . '_' . $request->file('image')->getClientOriginalName()
-        );
-    }
-
-    $video->save();
-
-    return redirect()->route('admin.videos.index')->with('t-success', 'Video created successfully!');
 }
 
-// Update an existing video
-public function update(Request $request, $id)
-{
-    $video = Video::findOrFail($id);
-
-    $request->validate([
-        'title' => 'required|string|max:255',
-        'theme_id' => 'required|exists:themes,id',
-        'video' => 'nullable|file|mimes:mp4,mov,avi',
-        'image' => 'nullable|file|mimes:jpeg,jpg,png|max:2048',
-        'description' => 'nullable|string',
-        'calories' => 'nullable|integer',
-        'minutes' => 'nullable|integer',
-    ]);
-
-    $video->title = $request->title;
-    $video->theme_id = $request->theme_id;
-    $video->description = $request->description;
-    $video->calories = $request->calories;
-    $video->minutes = $request->minutes;
-
-    if ($request->hasFile('video')) {
-        if ($video->video && file_exists(public_path($video->video))) {
-            Helper::fileDelete(public_path($video->video));
-        }
-        $video->video = Helper::fileUpload(
-            $request->file('video'),
-            'videos',
-            time() . '_' . $request->file('video')->getClientOriginalName()
-        );
-    }
-
-    if ($request->hasFile('image')) {
-        if ($video->image && file_exists(public_path($video->image))) {
-            Helper::fileDelete(public_path($video->image));
-        }
-        $video->image = Helper::fileUpload(
-            $request->file('image'),
-            'video_images',
-            time() . '_' . $request->file('image')->getClientOriginalName()
-        );
-    }
-
-    $video->save();
-
-    return redirect()->route('admin.videos.index')->with('t-success', 'Video updated successfully!');
-}
 
     /**
      * Show the form for editing the specified video.
@@ -127,13 +85,63 @@ public function update(Request $request, $id)
     {
         $video = Video::findOrFail($id);
         $themes = Theme::all();
-        return view('backend.layouts.videos.edit', compact('video', 'themes'));
+        $categories = Category::all(); // Added
+        return view('backend.layouts.videos.edit', compact('video', 'themes', 'categories'));
     }
 
     /**
-     * Update the specified video.
+     * Update an existing video.
      */
-    
+    public function update(Request $request, $id)
+    {
+        $video = Video::findOrFail($id);
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'category_id' => 'nullable|exists:categories,id', // Added
+            'theme_id' => 'nullable|exists:themes,id',
+            'type' => 'nullable|in:beginner,intermediate,advance', // Added
+            'video' => 'nullable|file|mimes:mp4,mov,avi',
+            'image' => 'nullable|file|mimes:jpeg,jpg,png|max:2048',
+            'description' => 'nullable|string',
+            'calories' => 'nullable|integer',
+            'minutes' => 'nullable|integer',
+        ]);
+
+        $video->title = $request->title;
+        $video->category_id = $request->category_id ?? $video->category_id; // Added
+        $video->theme_id = $request->theme_id ?? $video->theme_id;
+        $video->type = $request->type ?? $video->type; // Added
+        $video->description = $request->description ?? $video->description;
+        $video->calories = $request->calories;
+        $video->minutes = $request->minutes;
+
+        if ($request->hasFile('video')) {
+            if ($video->video && file_exists(public_path($video->video))) {
+                Helper::fileDelete(public_path($video->video));
+            }
+            $video->video = Helper::fileUpload(
+                $request->file('video'),
+                'videos',
+                time() . '_' . $request->file('video')->getClientOriginalName()
+            );
+        }
+
+        if ($request->hasFile('image')) {
+            if ($video->image && file_exists(public_path($video->image))) {
+                Helper::fileDelete(public_path($video->image));
+            }
+            $video->image = Helper::fileUpload(
+                $request->file('image'),
+                'video_images',
+                time() . '_' . $request->file('image')->getClientOriginalName()
+            );
+        }
+
+        $video->save();
+
+        return redirect()->route('admin.videos.index')->with('t-success', 'Video updated successfully!');
+    }
 
     /**
      * Remove the specified video.
@@ -180,9 +188,4 @@ public function update(Request $request, $id)
 
         return redirect()->route('admin.videos.index')->with('t-success', 'Circle added successfully!');
     }
-
-
-
-
-
 }

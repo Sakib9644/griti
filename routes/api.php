@@ -30,14 +30,25 @@ use Illuminate\Support\Facades\Route;
 //page
 Route::get('/page/home', [HomeController::class, 'index']);
 
-Route::get('/category', [categoryController::class, 'index']);
+Route::get('/category/{search?}', [categoryController::class, 'index']);
+
+Route::get('/themes', [categoryController::class, 'themes']);
+
+Route::GET('/category_wise_themes/{catid?}/{type?}', [categoryController::class, 'category_wise_themes']);
+
+Route::get('/themes_wise_video/{id}', [categoryController::class, 'themes_wise_video']);
+
+
+Route::get('/circels/{id}', [categoryController::class, 'circels']);
+
+
 Route::get('/subcategory', [SubcategoryController::class, 'index']);
 
 Route::get('/social/links', [SocialLinksController::class, 'index']);
 Route::get('/settings', [SettingsController::class, 'index']);
 Route::get('/faq', [FaqController::class, 'index']);
 
-Route::post('subscriber/store',[SubscriberController::class, 'store'])->name('api.subscriber.store');
+Route::post('subscriber/store', [SubscriberController::class, 'store'])->name('api.subscriber.store');
 
 /*
 # Post
@@ -148,5 +159,3 @@ Route::prefix('reviews')->name('barcode')->group(function () {
 Route::prefix('user/info')->name('user/info')->group(function () {
     Route::POST('/', [OnboardingController::class, 'store']);
 });
-
-

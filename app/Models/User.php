@@ -52,7 +52,6 @@ use HasFactory, Notifiable, HasRoles,Billable;
     protected $hidden = [
         'password',
         'remember_token',
-        'user_info'
     ];
 
 

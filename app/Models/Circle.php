@@ -22,4 +22,13 @@ class Circle extends Model
     {
         return $this->belongsTo(Video::class);
     }
+    
+
+    public function getImageAttribute($value){
+
+
+        return $value ? url($value) : null;
+
+
+    }
 }

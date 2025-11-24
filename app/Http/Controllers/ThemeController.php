@@ -35,14 +35,12 @@ class ThemeController extends Controller
         $request->validate([
             'name'        => 'nullable|string|max:255',
             'image'       => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
-            'category_id' => 'required|exists:categories,id',
-            'type'        => 'required|in:beginner,intermediate,advance',
         ]);
 
         $theme = new Theme();
         $theme->name = $request->name;
-        $theme->category_id = $request->category_id;
-        $theme->type = $request->type;
+        $theme->category_id = $request->category_id ?? Category::first()->id;
+        $theme->type = $request->type ?? 'advance';
 
         if ($request->hasFile('image')) {
             $theme->image = Helper::fileUpload(
