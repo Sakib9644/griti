@@ -13,14 +13,33 @@ class WorkoutVideos extends Model
     protected $fillable = ['title', 'description', 'category_id', 'user_id', 'video_path'];
 
     // Relationship: Each video belongs to a category
-   public function video()
-{
-    return $this->belongsTo(Video::class, 'category_id');
-    // adjust class & foreign key based on your setup
-}
+    public function video()
+    {
+        return $this->belongsTo(Video::class, 'video_id');
+        // adjust class & foreign key based on your setup
+    }
     // Relationship: Each video belongs to a user (uploader)
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+    public function music()
+    {
+        return $this->hasMany(Music::class, 'workout_videos_id');
+    }
+
+    public function getThumbnailAttribute($value)
+    {
+        return $value ? url($value) : null;
+    }
+
+    /**
+     * Get full URL for video.
+     */
+    public function getVideosAttribute($value)
+    {
+        return $value ? url($value) : null;
+    }
+
+
 }

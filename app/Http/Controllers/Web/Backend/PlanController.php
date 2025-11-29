@@ -73,7 +73,7 @@ class PlanController extends Controller
             $stripePrice = Price::create([
                 'product' => $stripeProduct->id,
                 'unit_amount' => $request->price * 100, // price in cents
-                'currency' => 'usd', // adjust currency as needed
+                'currency' => 'eur', // adjust currency as needed
                 'recurring' => ['interval' => $request->interval],
             ]);
 
@@ -121,7 +121,7 @@ class PlanController extends Controller
         $stripePrice = \Stripe\Price::create([
             'product' => $plan->stripe_product_id,
             'unit_amount' => $request->price * 100,
-            'currency' => 'usd',
+            'currency' => 'eur', // adjust currency as needed
             'recurring' => ['interval' => $request->interval],
         ]);
 

@@ -26,6 +26,8 @@ class Video extends Model
         return $this->belongsTo(Theme::class);
     }
 
+
+
     /**
      * A video belongs to a category.
      */

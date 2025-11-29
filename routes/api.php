@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\Gateway\Stripe\StripeCallBackController;
 use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\PlaninfoController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\ThemesController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -32,7 +33,17 @@ Route::get('/page/home', [HomeController::class, 'index']);
 
 Route::get('/category/{search?}', [categoryController::class, 'index']);
 
-Route::get('/themes', [categoryController::class, 'themes']);
+Route::middleware(['auth:api'])->controller(PostController::class)->group(function () {
+    Route::get('/category/{search?}', [categoryController::class, 'index']);
+    Route::get('/categoryWiseWorkouts/{id}', [categoryController::class, 'categoryWiseWorkouts']);
+    Route::get('/themeWiseWorkouts/{id}', [categoryController::class, 'themeWiseWorkouts']);
+    Route::get('/trainingLevelWiseWorkouts', [categoryController::class, 'trainingLevelWiseWorkouts']);
+    Route::get('/workoutWiseVideos/{id}', [categoryController::class, 'workoutWiseVideos']);
+    Route::POST('/active_workouts/save', [categoryController::class, 'active_workouts']);
+    Route::GET('/work_out_list', [categoryController::class, 'work_out_list']);
+    Route::get('/themes', [ThemesController::class, 'themes']);
+});
+
 
 Route::GET('/category_wise_themes/{catid?}/{type?}', [categoryController::class, 'category_wise_themes']);
 
@@ -152,6 +163,7 @@ Route::prefix('barcode')->name('barcode')->group(function () {
 
 Route::prefix('plans')->name('barcode')->group(function () {
     Route::get('/', [PlaninfoController::class, 'index']);
+    Route::get('/app', [PlaninfoController::class, 'index2']);
 });
 Route::prefix('reviews')->name('barcode')->group(function () {
     Route::get('/', [ReviewController::class, 'index']);

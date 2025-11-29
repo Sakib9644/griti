@@ -21,13 +21,11 @@ class HomeController extends Controller
     use CMSData;
     public function index()
     {
-        //CMS Data
-
-        //social links
         return view('auth.login');
     }
 
-    public function post($slug){
+    public function post($slug)
+    {
         $cms = [
             'home' => CMS::where('page', PageEnum::HOME)->where('status', 'active')->get(),
             'common' => CMS::where('page', PageEnum::COMMON)->where('status', 'active')->get(),
@@ -35,12 +33,12 @@ class HomeController extends Controller
         $post = Post::where('slug', base64_decode($slug))->where('status', 'active')->firstOrFail();
         return view('frontend.layouts.post', compact('cms', 'post'));
     }
-    public function user(){
+
+    public function user()
+    {
 
         $users = User::latest()->paginate(10);
 
         return view('backend.layouts.UserDetails.index', compact('users'));
     }
-
-
 }

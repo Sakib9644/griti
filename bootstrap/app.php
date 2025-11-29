@@ -11,6 +11,7 @@ use App\Http\Middleware\WebOtpVerifiedMiddleware;
 use App\Http\Middleware\ApiRetailerMiddleware;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -45,6 +46,11 @@ return Application::configure(basePath: dirname(__DIR__))
         __DIR__ . '/../routes/channels.php',
         ['prefix' => 'api', 'middleware' => ['auth:api']],
     )
+    ->withSchedule(function (Schedule $schedule) {
+        // $schedule->command('app:send-emails')->everySecond();
+          $schedule->command('app:subscription')->daily();
+    })
+
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'web-developer'         => WebDeveloperMiddleware::class,

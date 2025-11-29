@@ -12,18 +12,18 @@ class MusicController extends Controller
     /**
      * Display the list of music for a workout video.
      */
-  public function index()
-{
-    try {
-        $workoutVideo = WorkoutVideos::all();
-        // Use paginate instead of all()
-        $music = Music::paginate(10); // 10 items per page
+    public function index()
+    {
+        try {
+            $workoutVideo = WorkoutVideos::all();
+            // Use paginate instead of all()
+            $music = Music::paginate(10); // 10 items per page
 
-        return view('backend.layouts.music.index', compact('music', 'workoutVideo'));
-    } catch (\Exception $e) {
-        return redirect()->route('admin.music.index')->with('t-error', 'Failed to load music list: ' . $e->getMessage());
+            return view('backend.layouts.music.index', compact('music', 'workoutVideo'));
+        } catch (\Exception $e) {
+            return redirect()->route('admin.music.index')->with('t-error', 'Failed to load music list: ' . $e->getMessage());
+        }
     }
-}
     /**
      * Show the form for creating a new music entry.
      */
@@ -67,7 +67,10 @@ class MusicController extends Controller
 
             return redirect()->route('admin.music.index')->with('t-success', 'Music uploaded successfully!');
         } catch (\Exception $e) {
-            return redirect()->route('admin.music.index')->with('t-error', 'Failed to upload music: ' . $e->getMessage());
+            return redirect()
+                ->route('admin.music.index')
+                ->withInput() // preserves old form input
+                ->with('t-error', 'Failed to upload music: ' . $e->getMessage());
         }
     }
 

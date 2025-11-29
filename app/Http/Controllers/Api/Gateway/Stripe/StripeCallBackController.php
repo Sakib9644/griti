@@ -6,6 +6,7 @@ use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
 use App\Mail\UserCredentialsMail;
 use App\Mail\UserCredntilasMail;
+use App\Models\Plan;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\UserInfo;
@@ -21,6 +22,9 @@ use Stripe\Exception\ApiErrorException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Laravel\Cashier\Billable; // if using $user->createSetupIntent()
+use Stripe\Customer;
+use Stripe\PaymentIntent;
+use Stripe\SetupIntent;
 
 class StripeCallBackController extends Controller
 {
@@ -309,5 +313,224 @@ class StripeCallBackController extends Controller
     public function failure(Request $request)
     {
         return redirect()->to($this->redirectFail);
+    }
+
+
+    // public function createIntent2(Request $request)
+    // {
+    //     $request->validate([
+    //         'email' => 'required|email',
+    //         'plan_id' => 'required|exists:plans,id', // ensure plan exists
+    //     ]);
+
+    //     try {
+    //         $user = User::where('email', $request->email)->first();
+
+    //         if (!$user) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'User not found',
+    //             ], 404);
+    //         }
+
+    //         $plan = Plan::find($request->plan_id);
+
+    //         if (!$plan) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Plan not found',
+    //             ], 404);
+    //         }
+
+    //         \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+    //         $intent = $user->createSetupIntent([
+    //             'payment_method_types' => ['card'],
+    //             'metadata' => [
+    //                 'plan_id' => $plan->id,
+    //             ],
+    //         ]);
+
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'Setup intent created successfully',
+    //             'data' => ['intent' => $intent],
+    //         ], 200);
+    //     } catch (\Exception $e) {
+    //         Log::error($e->getMessage());
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Error creating setup intent',
+    //             'details' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+
+
+
+    public function createIntent2(Request $request)
+    {
+
+        $user = auth('api')->user();
+        // dd($user);
+
+        $plan = Plan::find($request->plan_id);
+        $priceId = $plan->stripe_price_id;
+        // dd($priceId);
+
+
+        // if (!$user->stripe_id) {
+        $customer = Customer::create([
+            'email' => $request->email,
+            'name' => $user->name,
+        ]);
+        $user->stripe_id = $customer->id;
+        $user->save();
+        // }
+
+        // PaymentIntent
+        $intent = SetupIntent::create([
+
+            'customer' => $user->stripe_id,
+            'payment_method_types' => ['card'],
+            'usage' => 'off_session',
+            'metadata' => [
+                'price_id' => $priceId,
+                'user_id' => $user->id,
+            ],
+        ]);
+
+        return response()->json([
+            'client_secret' => $intent->client_secret,
+            'payment_intent_id' => $intent->id,
+        ]);
+    }
+
+
+
+
+
+    public function confirmSubscription(Request $request)
+    {
+        $user = auth('api')->user();
+        $plan = Plan::findOrFail($request->plan_id);
+
+
+        $setupIntents = \Stripe\SetupIntent::all([
+            'customer' => $user->stripe_id,
+            'limit' => 1,
+        ]);
+
+        $paymentMethod = $setupIntents->data[0]->payment_method;
+
+        // এখন Subscription তৈরি কর
+        \Stripe\Subscription::create([
+            'customer' => $user->stripe_id,
+            'items' => [['price' => $plan->stripe_price_id]],
+            'default_payment_method' => $paymentMethod,
+            'metadata' => ['plan_id' => $plan->id],
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public function subscriptions(Request $request)
+    {
+        // Validate request
+        $request->validate([
+            'email' => 'required|email',
+            'payment_method' => 'required|string',
+            'setup_intent_id' => 'required|string',
+        ]);
+
+        // Find the user
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        // Check existing subscription
+        $subscription = $user->subscription('default');
+
+        if ($subscription && $subscription->valid()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You already have an active subscription.'
+            ], 400);
+        }
+
+        if ($subscription && $subscription->cancelled() && ! $subscription->ended()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have cancelled your plan. You can resubscribe after the current period ends.'
+            ], 400);
+        }
+
+        try {
+            \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+            $intent = \Stripe\SetupIntent::retrieve($request->setup_intent_id);
+            $metadata = $intent->metadata ?? [];
+
+            $planId = $metadata->plan_id ?? $request->plan_id ?? null;
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid SetupIntent: ' . $e->getMessage(),
+            ], 400);
+        }
+
+        // Find the plan
+        $plan = Plan::find($planId);
+        if (!$plan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Plan not found',
+            ], 404);
+        }
+        if (!$user->stripe_id) {
+            $user->createAsStripeCustomer();
+        }
+
+        // ✅ Attach the payment method to the customer and set it as default
+        $user->updateDefaultPaymentMethod($request->payment_method);
+        try {
+            $subscription = $user->newSubscription('default', $plan->stripe_price_id)
+                ->trialDays(3)
+                ->create($request->payment_method);
+
+            $userInfo = UserInfo::firstOrNew(['user_id' => $user->id]);
+            $userInfo->subscription_id = $subscription->stripe_id;
+            $userInfo->price =  $plan->price;
+
+            $userInfo->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Subscription created successfully',
+                'subscription' => $subscription,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Subscription failed: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

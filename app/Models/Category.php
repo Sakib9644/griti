@@ -41,7 +41,7 @@ class Category extends Model
     public function products() {
         return $this->hasMany(Product::class);
     }
-    public function Theme() {
-        return $this->hasMany(Theme::class);
+    public function Workoutlist() {
+        return $this->hasMany(Video::class);
     }
 }

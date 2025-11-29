@@ -34,14 +34,14 @@
                                         <td>{{ $workout->video ? $workout->video->title : '-' }}</td>
                                         <td>{{ $workout->title }}</td>
                                         <td>
-                                            @if ($workout->thumbnail && file_exists(public_path($workout->thumbnail)))
-                                                <img src="{{ asset($workout->thumbnail) }}" width="60" class="rounded">
+                                            @if ($workout->thumbnail )
+                                                <img src="{{ asset($workout->thumbnail) }}" width="60" class="">
                                             @else
                                                 <span class="text-muted">No Image</span>
                                             @endif
                                         </td>
                                         <td>
-                                            @if ($workout->videos && file_exists(public_path($workout->videos)))
+                                            @if ($workout->videos )
                                                 <video width="200" controls>
                                                     <source src="{{ asset($workout->videos) }}" type="video/mp4">
                                                     Your browser does not support the video tag.

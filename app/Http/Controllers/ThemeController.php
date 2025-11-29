@@ -68,15 +68,15 @@ class ThemeController extends Controller
     /**
      * Update the specified theme in storage.
      */
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'name'        => 'nullable|string|max:255',
-            'image'       => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
-            'category_id' => 'required|exists:categories,id',
-            'type'        => 'required|in:beginner,intermediate,advance',
-        ]);
+   public function update(Request $request, $id)
+{
+    $request->validate([
+        'name'        => 'nullable|string|max:255',
+        'image'       => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
 
+    ]);
+
+    try {
         $theme = Theme::findOrFail($id);
         $theme->name = $request->name;
         $theme->category_id = $request->category_id;
@@ -98,7 +98,14 @@ class ThemeController extends Controller
         $theme->save();
 
         return redirect()->route('admin.theme.index')->with('t-success', 'Theme updated successfully!');
+    } catch (\Exception $e) {
+        // Log the error for debugging
+        \Log::error('Theme update failed: '.$e->getMessage());
+
+        // Redirect back with an error message
+        return redirect()->back()->with('t-error', 'Something went wrong while updating the theme.');
     }
+}
 
     /**
      * Remove the specified theme from storage.

@@ -105,6 +105,10 @@ use HasFactory, Notifiable, HasRoles,Billable;
     {
         return $this->hasMany(FirebaseTokens::class);
     }
+    public function activeworkouts()
+    {
+        return $this->hasMany(ActiveWorkout::class);
+    }
 
     public function profile() {
         return $this->hasOne(Profile::class);
@@ -150,6 +154,8 @@ use HasFactory, Notifiable, HasRoles,Billable;
     {
         return $this->hasMany(Room::class, 'user_two_id');
     }
+
+
 
     public function allRooms()
     {

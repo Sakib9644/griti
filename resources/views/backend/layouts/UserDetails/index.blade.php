@@ -36,18 +36,128 @@
                                             <th>Name</th>
                                             <td>{{ $user->name }}</td>
                                         </tr>
-                                        <tr>
-                                            <th>Age</th>
-                                            <td>{{ $user->user_info->age ?? 'N/A' }} Yrs</td>
-                                        </tr>
+
                                         <tr>
                                             <th>Email</th>
                                             <td>{{ $user->email }}</td>
                                         </tr>
+
+                                        <tr>
+                                            <th>Age</th>
+                                            <td>
+                                                {{ $user->user_info?->age ? \Carbon\Carbon::parse($user->user_info->age)->age . ' Years' : 'N/A' }}
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Height (Text Input)</th>
+                                            <td>{{ $user->user_info->height_in ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Weight (Text Input)</th>
+                                            <td>{{ $user->user_info->weight_in ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Target Weight (Text Input)</th>
+                                            <td>{{ $user->user_info->target_weight_in ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>BMI</th>
+                                            <td>{{ $user->user_info->bmi ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Body Part Focus</th>
+                                            <td>{{ $user->user_info->body_part_focus ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Body Satisfaction</th>
+                                            <td>{{ $user->user_info->body_satisfaction ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Celebration Plan</th>
+                                            <td>{{ $user->user_info->celebration_plan ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Current Body Type</th>
+                                            <td>{{ $user->user_info->current_body_type ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Current Weight</th>
+                                            <td>{{ $user->user_info->current_weight ?? 'N/A' }} kg</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Dream Body</th>
+                                            <td>{{ $user->user_info->dream_body ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Height</th>
+                                            <td>{{ $user->user_info->height ?? 'N/A' }} cm</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Target Weight</th>
+                                            <td>{{ $user->user_info->target_weight ?? 'N/A' }} kg</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Trying Duration</th>
+                                            <td>{{ $user->user_info->trying_duration ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Urgent Improvement</th>
+                                            <td>{{ $user->user_info->urgent_improvement ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Price</th>
+                                            <td>{{ $user->user_info->price ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Payment Status</th>
+                                            <td>{{ $user->user_info->payment_status ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Subscription ID</th>
+                                            <td>{{ $user->user_info->subscription_id ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Signature</th>
+                                            <td>{{ $user->user_info->signature ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Payment Method</th>
+                                            <td>{{ $user->user_info->payment_method ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Created At</th>
+                                            <td>{{ $user->user_info->created_at ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Updated At</th>
+                                            <td>{{ $user->user_info->updated_at ?? 'N/A' }}</td>
+                                        </tr>
+
                                     </table>
                                 </div>
                             </div>
-                        </div><!-- COL END -->
+                        </div>
                     </div>
                 @endforeach
 

@@ -71,7 +71,7 @@ class OnboardingController extends Controller
                 'target_weight_in' => $request->target_weight_in,
                 'trying_duration' => $request->trying_duration,
                 'urgent_improvement' => $request->urgent_improvement,
-                'payment_status' => $request->payment_status ?? 'trial',
+                'payment_status' => $request->payment_status ?? '',
                 'signature' => $signaturePath ? url($signaturePath) : null,
                 'price' => 0,
             ]

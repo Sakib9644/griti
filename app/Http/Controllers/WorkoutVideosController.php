@@ -36,7 +36,7 @@ class WorkoutVideosController extends Controller
         $request->validate([
             'video_id' => 'required|exists:videos,id',
             'title' => 'required|string|max:255',
-            'thumbnail' => 'required|file|mimes:jpeg,jpg,png|max:2048',
+            'thumbnail' => 'required|file|mimes:jpeg,jpg,png',
             'videos' => 'required|file|mimes:mp4,mov,avi',
             'seconds' => 'required|integer',
             'descriptions' => 'nullable|string',
@@ -89,7 +89,7 @@ class WorkoutVideosController extends Controller
         $request->validate([
             'video_id' => 'required|exists:videos,id',
             'title' => 'required|string|max:255',
-            'thumbnail' => 'nullable|file|mimes:jpeg,jpg,png|max:2048',
+            'thumbnail' => 'nullable|file|mimes:jpeg,jpg,png',
             'videos' => 'nullable|file|mimes:mp4,mov,avi',
             'seconds' => 'required|integer',
             'descriptions' => 'nullable|string',

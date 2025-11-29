@@ -15,10 +15,10 @@
                         </ol>
                     </div>
                     <div>
-                        {{-- <button type="button" class="btn btn-primary ms-3" data-bs-toggle="modal"
+                        <button type="button" class="btn btn-primary ms-3" data-bs-toggle="modal"
                             data-bs-target="#createPlanModal">
                             <i class="fa fa-plus me-1"></i> Create New Plan
-                        </button> --}}
+                        </button>
                     </div>
                 </div>
 

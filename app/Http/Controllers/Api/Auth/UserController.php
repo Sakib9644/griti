@@ -15,12 +15,12 @@ class UserController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->select = ['id', 'name', 'email', 'avatar', 'otp_verified_at', 'last_activity_at'];   
+        $this->select = ['id', 'name', 'email', 'avatar', 'otp_verified_at', 'last_activity_at'];
     }
 
     public function me()
-    {   
-        $data = User::select($this->select)->with('roles')->find(auth('api')->user()->id);     
+    {
+        $data = User::with(['user_info:user_id,age,current_weight,height'])->select($this->select)->find(auth('api')->user()->id);
         return Helper::jsonResponse(true, 'User details fetched successfully', 200, $data);
     }
 
@@ -93,5 +93,5 @@ class UserController extends Controller
         $user->forceDelete();
         return Helper::jsonResponse(true, 'Profile deleted successfully', 200);
     }
-    
+
 }
