@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Circle;
 use Illuminate\Http\Request;
 use App\Helpers\Helper;
+use App\Models\Videolibrary;
 
 class VideoController extends Controller
 {
@@ -16,7 +17,7 @@ class VideoController extends Controller
      */
     public function index()
     {
-        $videos = Video::with('theme', 'category', 'circles')->get();
+        $videos = Video::with('theme', 'category', 'circles')->paginate(10);
         return view('backend.layouts.videos.index', compact('videos'));
     }
 
@@ -26,56 +27,69 @@ class VideoController extends Controller
     public function create()
     {
         $themes = Theme::all();
-        $categories = Category::all(); // Added
+        $categories = Category::all(); 
         return view('backend.layouts.videos.create', compact('themes', 'categories'));
     }
 
     /**
      * Store a newly created video.
      */
-   public function store(Request $request)
-{
-    try {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'category_id' => 'nullable|exists:categories,id',
-            'theme_id' => 'nullable|exists:themes,id',
-            'type' => 'nullable|in:beginner,intermediate,advance',
-            'video' => 'nullable|file|mimes:mp4,mov,avi',
-            'image' => 'required|file|mimes:jpeg,jpg,png|max:2048',
-            'description' => 'nullable|string',
-            'calories' => 'nullable|integer',
-            'minutes' => 'nullable|integer',
-        ]);
+    public function store(Request $request)
+    {
+        try {
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'category_id' => 'nullable|exists:categories,id',
+                'theme_id' => 'nullable|exists:themes,id',
+                'type' => 'nullable|in:beginner,intermediate,advance',
+                'video' => 'nullable|file|mimes:mp4,mov,avi',
+                'image' => 'required|file|mimes:jpeg,jpg,png|max:2048',
+                'description' => 'nullable|string',
+                'calories' => 'nullable|integer',
+                'minutes' => 'nullable|integer',
+            ]);
 
-        $video = new Video();
-        $video->title = $request->title;
-        $video->category_id = $request->category_id;
-        $video->theme_id = $request->theme_id;
-        $video->type = $request->type ;
-        $video->description = $request->description;
-        $video->calories = $request->calories;
-        $video->minutes = $request->minutes;
-        $video->video = "demo";
+            $video = new Video();
+            $video->title = $request->title;
+            $video->category_id = $request->category_id;
+            $video->theme_id = $request->theme_id;
+            $video->type = $request->type;
+            $video->description = $request->description;
+            $video->calories = $request->calories;
+            $video->minutes = $request->minutes;
+            $video->video = "demo";
 
 
-        if ($request->hasFile('image')) {
-            $video->image = Helper::fileUpload(
-                $request->file('image'),
-                'video_images',
-                time() . '_' . $request->file('image')->getClientOriginalName()
-            );
+
+
+            if ($request->hasFile('image')) {
+                $video->image = Helper::fileUpload(
+                    $request->file('image'),
+                    'video_images',
+                    time() . '_' . $request->file('image')->getClientOriginalName()
+                );
+            }
+
+            $video->save();
+
+            if ($request->has('work_out_video_id')) {
+
+                foreach ($request->work_out_video_id as $workout) {
+
+                    $Videolibrary = new Videolibrary();
+
+                    $Videolibrary->video_id = $video->id;
+                    $Videolibrary->work_out_video_id = $workout;
+
+                    $Videolibrary->save();
+                }
+            };
+
+            return redirect()->route('admin.videos.index')->with('t-success', 'Work-list created successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('t-error', 'Something went wrong: ' . $e->getMessage());
         }
-
-        $video->save();
-
-        return redirect()->route('admin.videos.index')->with('t-success', 'Video created successfully!');
-
-    } catch (\Exception $e) {
-        // Catch any error and redirect with t-error
-        return redirect()->back()->withInput()->with('t-error', 'Something went wrong: ' . $e->getMessage());
     }
-}
 
 
     /**
@@ -94,54 +108,73 @@ class VideoController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $video = Video::findOrFail($id);
+        try {
+            $video = Video::findOrFail($id);
 
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'category_id' => 'nullable|exists:categories,id', // Added
-            'theme_id' => 'nullable|exists:themes,id',
-            'type' => 'nullable|in:beginner,intermediate,advance', // Added
-            'video' => 'nullable|file|mimes:mp4,mov,avi',
-            'image' => 'nullable|file|mimes:jpeg,jpg,png|max:2048',
-            'description' => 'nullable|string',
-            'calories' => 'nullable|integer',
-            'minutes' => 'nullable|integer',
-        ]);
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'category_id' => 'nullable|exists:categories,id',
+                'theme_id' => 'nullable|exists:themes,id',
+                'type' => 'nullable|in:beginner,intermediate,advance',
+                'video' => 'nullable|file|mimes:mp4,mov,avi',
+                'image' => 'nullable|file|mimes:jpeg,jpg,png|max:2048',
+                'description' => 'nullable|string',
+                'calories' => 'nullable|integer',
+                'minutes' => 'nullable|integer',
+                'work_out_video_id' => 'nullable|array',
+                'work_out_video_id.*' => 'integer|exists:workout_videos,id',
+            ]);
 
-        $video->title = $request->title;
-        $video->category_id = $request->category_id ?? $video->category_id; // Added
-        $video->theme_id = $request->theme_id ?? $video->theme_id;
-        $video->type = $request->type ?? $video->type; // Added
-        $video->description = $request->description ?? $video->description;
-        $video->calories = $request->calories;
-        $video->minutes = $request->minutes;
+            $video->title = $request->title;
+            $video->category_id = $request->category_id;
+            $video->theme_id = $request->theme_id;
+            $video->type = $request->type;
+            $video->description = $request->description;
+            $video->calories = $request->calories;
+            $video->minutes = $request->minutes;
 
-        if ($request->hasFile('video')) {
-            if ($video->video && file_exists(public_path($video->video))) {
-                Helper::fileDelete(public_path($video->video));
+
+            if ($request->hasFile('video')) {
+                if ($video->video && file_exists(public_path($video->video))) {
+                    Helper::fileDelete(public_path($video->video));
+                }
+                $video->video = Helper::fileUpload(
+                    $request->file('video'),
+                    'videos',
+                    time() . '_' . $request->file('video')->getClientOriginalName()
+                );
             }
-            $video->video = Helper::fileUpload(
-                $request->file('video'),
-                'videos',
-                time() . '_' . $request->file('video')->getClientOriginalName()
-            );
-        }
 
-        if ($request->hasFile('image')) {
-            if ($video->image && file_exists(public_path($video->image))) {
-                Helper::fileDelete(public_path($video->image));
+            if ($request->hasFile('image')) {
+                if ($video->image && file_exists(public_path($video->image))) {
+                    Helper::fileDelete(public_path($video->image));
+                }
+                $video->image = Helper::fileUpload(
+                    $request->file('image'),
+                    'video_images',
+                    time() . '_' . $request->file('image')->getClientOriginalName()
+                );
             }
-            $video->image = Helper::fileUpload(
-                $request->file('image'),
-                'video_images',
-                time() . '_' . $request->file('image')->getClientOriginalName()
-            );
+
+            $video->save();
+
+            Videolibrary::where('video_id', $video->id)->delete();
+            if ($request->has('work_out_video_id')) {
+
+                foreach ($request->work_out_video_id as $workoutId) {
+                    $library = new Videolibrary();
+                    $library->video_id = $video->id;
+                    $library->work_out_video_id = $workoutId;
+                    $library->save();
+                }
+            }
+
+            return redirect()->route('admin.videos.index')->with('t-success', 'Work-list updated successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('t-error', 'Something went wrong: ' . $e->getMessage());
         }
-
-        $video->save();
-
-        return redirect()->route('admin.videos.index')->with('t-success', 'Video updated successfully!');
     }
+
 
     /**
      * Remove the specified video.
@@ -187,5 +220,10 @@ class VideoController extends Controller
         ]);
 
         return redirect()->route('admin.videos.index')->with('t-success', 'Circle added successfully!');
+    }
+    public function assignedVideos($id)
+    {
+        $video = Videolibrary::where('video_id', $id)->get();
+        return view('backend.layouts.videos.assgined_videos', compact('video'));
     }
 }

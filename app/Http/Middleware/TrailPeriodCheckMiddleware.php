@@ -24,8 +24,10 @@ class TrailPeriodCheckMiddleware
             if ($userInfo && $userInfo->payment_status === 'trial') {
                 $trialCreated = $userInfo->created_at;
                 $trialDays = 3;
+                $trail = $trialCreated->diffInDays(Carbon::now());
 
-                if (Carbon::now()->diffInDays($trialCreated) > $trialDays) {
+
+                if ( $trail > $trialDays) {
                     return response()->json([
                         'status' => 'error',
                         'message' => 'Your trial period has expired. You have not paid your subscription.'

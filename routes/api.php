@@ -25,25 +25,27 @@ use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\PlaninfoController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ThemesController;
+use App\Http\Controllers\FoodHealthController;
+use App\Http\Controllers\MotivationAiController;
+use App\Http\Controllers\NutrationController;
+use App\Http\Controllers\OpenAiChatController;
 use Illuminate\Support\Facades\Route;
 
 
 //page
 Route::get('/page/home', [HomeController::class, 'index']);
 
-Route::get('/category/{search?}', [categoryController::class, 'index']);
 
-Route::middleware(['auth:api'])->controller(PostController::class)->group(function () {
+Route::middleware(['auth:api', 'is_trail'])->group(function () {
     Route::get('/category/{search?}', [categoryController::class, 'index']);
     Route::get('/categoryWiseWorkouts/{id}', [categoryController::class, 'categoryWiseWorkouts']);
     Route::get('/themeWiseWorkouts/{id}', [categoryController::class, 'themeWiseWorkouts']);
     Route::get('/trainingLevelWiseWorkouts', [categoryController::class, 'trainingLevelWiseWorkouts']);
     Route::get('/workoutWiseVideos/{id}', [categoryController::class, 'workoutWiseVideos']);
-    Route::POST('/active_workouts/save', [categoryController::class, 'active_workouts']);
-    Route::GET('/work_out_list', [categoryController::class, 'work_out_list']);
+    Route::post('/active_workouts/save', [categoryController::class, 'active_workouts']);
+    Route::get('/work_out_list', [categoryController::class, 'work_out_list']);
     Route::get('/themes', [ThemesController::class, 'themes']);
 });
-
 
 Route::GET('/category_wise_themes/{catid?}/{type?}', [categoryController::class, 'category_wise_themes']);
 
@@ -170,4 +172,20 @@ Route::prefix('reviews')->name('barcode')->group(function () {
 });
 Route::prefix('user/info')->name('user/info')->group(function () {
     Route::POST('/', [OnboardingController::class, 'store']);
+});
+Route::prefix('nutration')->name('nutration')->group(function () {
+    Route::POST('/store', [NutrationController::class, 'store']);
+    Route::GET('/my', [NutrationController::class, 'mynutration']);
+    Route::GET('/recipes', [NutrationController::class, 'recipes']);
+    Route::Post('/chat', [OpenAiChatController::class, 'openAiChat']);
+});
+Route::prefix('motivation')->name('motivation')->group(function () {
+
+    Route::POST('/chat', [MotivationAiController::class, 'openAiChat']);
+
+});
+Route::prefix('food_scanner')->name('food_scanner')->group(function () {
+
+    Route::POST('/checkHealth', [FoodHealthController::class, 'checkHealth']);
+
 });

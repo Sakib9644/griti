@@ -316,138 +316,137 @@ class StripeCallBackController extends Controller
     }
 
 
-    // public function createIntent2(Request $request)
-    // {
-    //     $request->validate([
-    //         'email' => 'required|email',
-    //         'plan_id' => 'required|exists:plans,id', // ensure plan exists
-    //     ]);
-
-    //     try {
-    //         $user = User::where('email', $request->email)->first();
-
-    //         if (!$user) {
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'User not found',
-    //             ], 404);
-    //         }
-
-    //         $plan = Plan::find($request->plan_id);
-
-    //         if (!$plan) {
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'Plan not found',
-    //             ], 404);
-    //         }
-
-    //         \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
-    //         $intent = $user->createSetupIntent([
-    //             'payment_method_types' => ['card'],
-    //             'metadata' => [
-    //                 'plan_id' => $plan->id,
-    //             ],
-    //         ]);
-
-    //         return response()->json([
-    //             'status' => 'success',
-    //             'message' => 'Setup intent created successfully',
-    //             'data' => ['intent' => $intent],
-    //         ], 200);
-    //     } catch (\Exception $e) {
-    //         Log::error($e->getMessage());
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'message' => 'Error creating setup intent',
-    //             'details' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-
-
-
-
     public function createIntent2(Request $request)
     {
-
-        $user = auth('api')->user();
-        // dd($user);
-
-        $plan = Plan::find($request->plan_id);
-        $priceId = $plan->stripe_price_id;
-        // dd($priceId);
-
-
-        // if (!$user->stripe_id) {
-        $customer = Customer::create([
-            'email' => $request->email,
-            'name' => $user->name,
-        ]);
-        $user->stripe_id = $customer->id;
-        $user->save();
-        // }
-
-        // PaymentIntent
-        $intent = SetupIntent::create([
-
-            'customer' => $user->stripe_id,
-            'payment_method_types' => ['card'],
-            'usage' => 'off_session',
-            'metadata' => [
-                'price_id' => $priceId,
-                'user_id' => $user->id,
-            ],
+        $request->validate([
+            'plan_id' => 'required',
         ]);
 
-        return response()->json([
-            'client_secret' => $intent->client_secret,
-            'payment_intent_id' => $intent->id,
-        ]);
+        \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+
+        try {
+            $user = auth('api')->user();
+            $plan = \App\Models\Plan::findOrFail($request->plan_id);
+
+            $amount = $plan->price;
+
+            // 1️⃣ Ensure Stripe Customer Exists
+            if ($user->stripe_id) {
+
+                try {
+                    // Try retrieving Stripe customer
+                    \Stripe\Customer::retrieve($user->stripe_id);
+                } catch (\Exception $e) {
+                    // Customer does not exist → Create new one
+                    $customer = \Stripe\Customer::create([
+                        'email' => $user->email,
+                        'name'  => $user->name,
+                    ]);
+
+                    $user->stripe_id = $customer->id;
+                    $user->save();
+                }
+            } else {
+                // No customer ID saved → create fresh customer
+                $customer = \Stripe\Customer::create([
+                    'email' => $user->email,
+                    'name'  => $user->name,
+                ]);
+
+                $user->stripe_id = $customer->id;
+                $user->save();
+            }
+
+            // 2️⃣ Create PaymentIntent
+            $intent = \Stripe\PaymentIntent::create([
+                'amount'               => $amount * 100, // convert to cents
+                'currency'             => 'usd',
+                'customer'             => $user->stripe_id,
+                'payment_method_types' => ['card'],
+                'description'          => 'Initial subscription payment',
+
+                'metadata' => [
+                    'plan_id'       => $plan->id,
+                    'first_payment' => true,
+                ],
+
+                // Automatically allow future subscription billing
+                'setup_future_usage' => 'off_session',
+            ]);
+
+            // 3️⃣ Return client secret for mobile app
+            return response()->json([
+                'client_secret'     => $intent->client_secret,
+                'payment_intent_id' => $intent->id,
+            ]);
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 400);
+        }
     }
 
 
-
-
-
-    public function confirmSubscription(Request $request)
+    public function createSubscription(Request $request)
     {
+        $request->validate([
+            'plan_id'           => 'required',
+            'payment_intent_id' => 'required',
+        ]);
+
+        \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+
         $user = auth('api')->user();
-        $plan = Plan::findOrFail($request->plan_id);
+        $plan = \App\Models\Plan::findOrFail($request->plan_id);
 
+        try {
 
-        $setupIntents = \Stripe\SetupIntent::all([
-            'customer' => $user->stripe_id,
-            'limit' => 1,
-        ]);
+            // PaymentIntent retrieve
+            $intent = \Stripe\PaymentIntent::retrieve($request->payment_intent_id);
+            // dd($intent);
 
-        $paymentMethod = $setupIntents->data[0]->payment_method;
+            $paymentMethodId = $intent->payment_method;
 
-        // এখন Subscription তৈরি কর
-        \Stripe\Subscription::create([
-            'customer' => $user->stripe_id,
-            'items' => [['price' => $plan->stripe_price_id]],
-            'default_payment_method' => $paymentMethod,
-            'metadata' => ['plan_id' => $plan->id],
-        ]);
+            // 2️⃣ Attach Payment Method to Customer
+            \Stripe\PaymentMethod::retrieve($paymentMethodId)
+                ->attach(['customer' => $user->stripe_id]);
 
-        return response()->json(['success' => true]);
+            \Stripe\Customer::update($user->stripe_id, [
+                'invoice_settings' => [
+                    'default_payment_method' => $paymentMethodId,
+                ],
+            ]);
+
+            // 4️⃣ Create subscription with TRIAL
+            $subscription = \Stripe\Subscription::create([
+                'customer'               => $user->stripe_id,
+                'items'                  => [
+                    ['price' => $plan->stripe_price_id],
+                ],
+                'default_payment_method' => $paymentMethodId,
+
+            ]);
+
+            $user_inf = Userinfo::where('user_id', $user->id)->first();
+            $user_inf->subscription_id = $subscription->id;
+
+            $user_inf->save();
+
+            return response()->json([
+                'success'      => true,
+                'subscription' => $subscription->status,
+                'trial_ends'   => $subscription->trial_end,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error("Subscription creation failed: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create subscription',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public function subscriptions(Request $request)
     {
         // Validate request

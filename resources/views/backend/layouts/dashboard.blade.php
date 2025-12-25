@@ -121,7 +121,7 @@
                 </div>
             </div>
             <!-- ROW-2 -->
-            <!-- <div class="row">
+           <div class="row">
                 <div class="col-sm-12 col-md-12 col-xl-4 col-lg-6">
                     <div class="row">
                         <div class="col-lg-12 col-xl-12 col-md-6 col-sm-12">
@@ -348,7 +348,7 @@
                     </div>
                 </div>
             </div> -->
-            <!-- ROW-2 END -->
+           ROW-2 END -->
 
             <!-- ROW-3 -->
             <!-- <div class="row">
@@ -1025,15 +1025,15 @@
             const response = await fetch(`/transactions/{{ auth()->user()->slug }}.json`);
             const transactionData = await response.json();
 
-            const categories = Object.keys(transactionData).map(month => 
+            const categories = Object.keys(transactionData).map(month =>
                 month.charAt(0).toUpperCase() + month.slice(1)
             );
-            
-            const incrementData = Object.values(transactionData).map(value => 
+
+            const incrementData = Object.values(transactionData).map(value =>
                 parseFloat(value.increment)
             );
-            
-            const decrementData = Object.values(transactionData).map(value => 
+
+            const decrementData = Object.values(transactionData).map(value =>
                 parseFloat(value.decrement)
             );
 

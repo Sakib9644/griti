@@ -54,44 +54,53 @@ class PlanController extends Controller
     }
 
 
-    public function store(Request $request)
-    {
+  public function store(Request $request)
+{
+    try {
 
-        try {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|integer|min:0',
+            'interval' => 'required|string|in:day,week,month,year',
+        ]);
 
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'price' => 'required|integer|min:0',
-                'interval' => 'required|string|in:day,week,month,year',
-            ]);
-            // Create Stripe Product
-            $stripeProduct = Product::create([
-                'name' => $request->name,
-            ]);
+        // Create Stripe Product
+        $stripeProduct = Product::create([
+            'name' => $request->name,
+        ]);
 
-            // Create Stripe Price
-            $stripePrice = Price::create([
-                'product' => $stripeProduct->id,
-                'unit_amount' => $request->price * 100, // price in cents
-                'currency' => 'eur', // adjust currency as needed
-                'recurring' => ['interval' => $request->interval],
-            ]);
+        // Create Stripe Price with 3 trial days
+        $stripePrice = Price::create([
+            'product' => $stripeProduct->id,
+            'unit_amount' => $request->price * 100, // cents
+            'currency' => 'eur',
+            'recurring' => [
+                'interval' => $request->interval,
+                'trial_period_days' => 3, // 🔥 Add trial days here
+            ],
+        ]);
 
-            // Save in database
-            $plan = new Plan();
-            $plan->name = $request->name;
-            $plan->stripe_product_id = $stripeProduct->id;
-            $plan->stripe_price_id = $stripePrice->id;
-            $plan->price = $request->price;
-            $plan->interval = $request->interval;
-            $plan->save();
+        // Save in database
+        $plan = new Plan();
+        $plan->name = $request->name;
+        $plan->stripe_product_id = $stripeProduct->id;
+        $plan->stripe_price_id = $stripePrice->id;
+        $plan->price = $request->price;
+        $plan->interval = $request->interval;
+        $plan->save();
 
-            return redirect()->route('subscriptions-plans.index')->with('success', 'Plan created successfully.');
-        } catch (Exception $e) {
-            Log::error('Plan creation failed: ' . $e->getMessage());
-            return redirect()->back()->withInput()->withErrors('Failed to create plan: ' . $e->getMessage());
-        }
+        return redirect()->route('subscriptions-plans.index')
+            ->with('success', 'Plan created successfully with 3 trial days.');
+
+    } catch (Exception $e) {
+
+        Log::error('Plan creation failed: ' . $e->getMessage());
+        return redirect()->back()
+            ->withInput()
+            ->withErrors('Failed to create plan: ' . $e->getMessage());
     }
+}
+
 
     public function edit($plan)
     {
@@ -99,7 +108,7 @@ class PlanController extends Controller
         return view('backend.layouts.plans.edit', compact('plan'));
     }
 
-   public function update(Request $request, $id)
+public function update(Request $request, $id)
 {
     $request->validate([
         'name' => 'required|string|max:255',
@@ -117,12 +126,15 @@ class PlanController extends Controller
             $product->save();
         }
 
-        // Create a new price on Stripe
+        // Create a new price on Stripe with trial days
         $stripePrice = \Stripe\Price::create([
             'product' => $plan->stripe_product_id,
             'unit_amount' => $request->price * 100,
-            'currency' => 'eur', // adjust currency as needed
-            'recurring' => ['interval' => $request->interval],
+            'currency' => 'eur',
+            'recurring' => [
+                'interval' => $request->interval,
+                'trial_period_days' => 3, // 🔥 Add trial days here
+            ],
         ]);
 
         // Update database record
@@ -134,12 +146,11 @@ class PlanController extends Controller
         ]);
 
         return redirect()->route('subscriptions-plans.index')
-            ->with('t-success', 'Plan updated successfully.');
+            ->with('t-success', 'Plan updated successfully with 3 trial days.');
     } catch (\Exception $e) {
-        // Log the error for debugging
+
         Log::error('Plan update failed: ' . $e->getMessage());
 
-        // Show error message in UI
         return redirect()
             ->back()
             ->withInput()

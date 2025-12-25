@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Circle;
 use App\Models\Theme;
 use App\Models\Video;
+use App\Models\Videolibrary;
 use App\Models\WorkoutVideos;
 use Illuminate\Container\Attributes\DB;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,6 +18,7 @@ class categoryController extends Controller
 {
     public function index(Request $request)
     {
+
         $search = $request->query('search');
 
         $query = Category::where('status', 'active');
@@ -99,24 +101,32 @@ class categoryController extends Controller
     }
 
 
-    public function workoutWiseVideos($workoutId)
-    {
-        // Fetch videos for a specific workout
-        $videos = WorkoutVideos::with(['music:id,workout_videos_id,music_file,title,duration'])
-            ->select('id', 'title', 'thumbnail', 'seconds', 'descriptions', 'videos')
-            ->where('video_id', $workoutId) // filter by workout
-            ->get();
+public function workoutWiseVideos($workoutId)
+{
+    // Fetch videos for a specific workout
+    $videos = Videolibrary::where('video_id', $workoutId)->get();
 
+    // Map videos to include workoutVideo and music
+    $videoData = $videos->flatMap(function ($v) {
+        return $v->workoutVideo()
+                 ->with(['music:id,workout_videos_id,music_file,title,duration'])
+                 ->select('id', 'title', 'thumbnail', 'seconds', 'descriptions', 'videos')
+                 ->get();
+    });
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Videos retrieved by workout successfully',
-            'total_cal' => Video::find($workoutId)->calories ?? null,
-            'minutes' => Video::find($workoutId)->minutes ?? null,
-            'list_id' => Video::find($workoutId)->id ?? null,
-            'data' => $videos,
-        ]);
-    }
+    // Fetch total calories, minutes, list_id from the Video model
+    $videoSummary = Video::find($workoutId);
+
+    return response()->json([
+        'success'   => true,
+        'message'   => 'Videos retrieved by workout successfully',
+        'total_cal' => $videoSummary->calories ?? null,
+        'minutes'   => $videoSummary->minutes ?? null,
+        'list_id'   => $videoSummary->id ?? null,
+        'data'      => $videoData,
+    ]);
+}
+
     public function active_workouts(Request $request)
     {
         $workoutId = $request->list_id;

@@ -9,6 +9,7 @@ use App\Http\Middleware\WebDeveloperMiddleware;
 use App\Http\Middleware\ApiOtpVerifiedMiddleware;
 use App\Http\Middleware\WebOtpVerifiedMiddleware;
 use App\Http\Middleware\ApiRetailerMiddleware;
+use App\Http\Middleware\TrailPeriodCheckMiddleware;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Console\Scheduling\Schedule;
@@ -63,7 +64,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'check'                 => WebAuthCheckMiddleware::class,
             'role'                  => RoleMiddleware::class,
             'permission'            => PermissionMiddleware::class,
-            'role_or_permission'    => RoleOrPermissionMiddleware::class
+            'role_or_permission'    => RoleOrPermissionMiddleware::class,
+            'is_trail'    => TrailPeriodCheckMiddleware::class
         ]);
         $middleware->validateCsrfTokens(except: [
             'payment/stripe/webhook',

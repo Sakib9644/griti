@@ -66,6 +66,8 @@ class StripeWebHookController extends Controller
     }
 
 
+
+
 public function webhook(Request $request)
 {
     $payload = $request->getContent();
@@ -73,7 +75,7 @@ public function webhook(Request $request)
     $endpoint_secret = env('STRIPE_WEBHOOK_SECRET');
 
     try {
-        $event = \Stripe\Webhook::constructEvent($payload, $sig_header, $endpoint_secret);
+        $event = Webhook::constructEvent($payload, $sig_header, $endpoint_secret);
     } catch (\Exception $e) {
         Log::error('Stripe webhook signature verification failed: ' . $e->getMessage());
         return response('Invalid payload', 400);
@@ -84,53 +86,101 @@ public function webhook(Request $request)
         'id' => $event->id
     ]);
 
-    if ($event->type === 'invoice.payment_succeeded') {
+    switch ($event->type) {
 
-        $invoice = $event->data->object;
+        // Payment succeeded (including trial $0 invoices)
+        case 'invoice.payment_succeeded':
+            $invoice = $event->data->object;
+            $subscriptionId = $this->getSubscriptionIdFromInvoice($invoice);
 
-        Log::info('Invoice payment succeeded', ['invoice_id' => $invoice->id]);
+            if (!$subscriptionId) break;
 
-        $subscriptionId = $this->getSubscriptionIdFromInvoice($invoice);
+            $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
+            if (!$userInfo) break;
 
-        if (!$subscriptionId) {
-            Log::warning("No subscription ID found for invoice", ['invoice_id' => $invoice->id]);
-            return response('ok', 200);
-        }
+            $user = $userInfo->user;
 
-        $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
+            // Check if this is a trial (amount_paid = 0)
+            if ($invoice->amount_paid == 0) {
+                $userInfo->payment_status = 'trial';
+            } else {
+                $userInfo->payment_status = 'paid';
 
-        if (!$userInfo) {
-            Log::warning("No user found for subscription", ['subscription_id' => $subscriptionId]);
-            return response('ok', 200);
-        }
+                // Update default payment method
+                if (!empty($invoice->payment_intent)) {
+                    try {
+                        $paymentIntent = PaymentIntent::retrieve($invoice->payment_intent);
+                        $paymentMethodId = $paymentIntent->payment_method ?? null;
 
-        $user = $userInfo->user; // assuming UserInfo belongsTo User
-
-        // Update default payment method and store in userInfo.payment_method
-        if (!empty($invoice->payment_intent)) {
-            try {
-                $paymentIntent = \Stripe\PaymentIntent::retrieve($invoice->payment_intent);
-                $paymentMethodId = $paymentIntent->payment_method ?? null;
-
-                if ($paymentMethodId) {
-                    // Update user's default payment method
-                    $user->updateDefaultPaymentMethod($paymentMethodId);
-
-                    // Store in userInfo table
-                    $userInfo->payment_method = $paymentMethodId;
-
-                    Log::info("Updated default payment method for user: {$user->id}");
+                        if ($paymentMethodId) {
+                            $user->updateDefaultPaymentMethod($paymentMethodId);
+                            $userInfo->payment_method = $paymentMethodId;
+                            Log::info("Updated default payment method for user: {$user->id}");
+                        }
+                    } catch (\Exception $e) {
+                        Log::error("Failed to update payment method: " . $e->getMessage());
+                    }
                 }
-            } catch (\Exception $e) {
-                Log::error("Failed to update payment method: " . $e->getMessage());
             }
-        }
 
-        // Update payment_status
-        $userInfo->payment_status = $invoice->amount_paid == 0 ? 'trial' : 'paid';
-        $userInfo->payment_method = 'stripe';
+            $userInfo->save();
+            Log::info("Invoice processed for user: {$user->id}, status: {$userInfo->payment_status}");
+            break;
 
-        $userInfo->save();
+        // Payment failed
+        case 'invoice.payment_failed':
+            $invoice = $event->data->object;
+            $subscriptionId = $this->getSubscriptionIdFromInvoice($invoice);
+
+            if (!$subscriptionId) break;
+
+            $userInfo = UserInfo::where('subscription_id', $subscriptionId)->first();
+            if (!$userInfo) break;
+
+            $userInfo->payment_status = 'unpaid';
+            $userInfo->save();
+
+            Log::warning("Subscription payment failed for user: {$userInfo->user_id}");
+            break;
+
+        // Subscription canceled or expired
+        case 'customer.subscription.deleted':
+            $subscription = $event->data->object;
+            $userInfo = UserInfo::where('subscription_id', $subscription->id)->first();
+
+            if ($userInfo) {
+                $userInfo->payment_status = 'expired';
+                $userInfo->save();
+                Log::info("Subscription expired for user: {$userInfo->user_id}");
+            }
+            break;
+
+        // Subscription updated (optional: trial ending, status change)
+        case 'customer.subscription.updated':
+            $subscription = $event->data->object;
+            $userInfo = UserInfo::where('subscription_id', $subscription->id)->first();
+
+            if ($userInfo) {
+                // Update payment_status based on subscription status
+                if ($subscription->status === 'active') {
+                    // If active but no payment yet, it may still be trial
+                    $userInfo->payment_status = $subscription->trial_end && $subscription->trial_end > time()
+                        ? 'trial'
+                        : 'paid';
+                } elseif ($subscription->status === 'canceled' || $subscription->status === 'incomplete_expired') {
+                    $userInfo->payment_status = 'expired';
+                } else {
+                    $userInfo->payment_status = 'unpaid';
+                }
+
+                $userInfo->save();
+                Log::info("Subscription updated for user: {$userInfo->user_id}, status: {$userInfo->payment_status}");
+            }
+            break;
+
+        default:
+            Log::info('Unhandled Stripe event type: ' . $event->type);
+            break;
     }
 
     return response('Webhook handled', 200);
@@ -155,7 +205,6 @@ private function getSubscriptionIdFromInvoice($invoice)
 
     return null;
 }
-
 
 
 }

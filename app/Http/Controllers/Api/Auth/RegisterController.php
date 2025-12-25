@@ -160,9 +160,13 @@ class RegisterController extends Controller
                 'code'       => 200,
                 'token' =>  $token,
                 'data' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
+                     'id' => $user->id,
+                'avatar' => $user->avatar,
+                'name' => $user->name,
+                'email' => $user->email,
+                'user_info' => $user->user_info ? 1 : 0,
+                'Payment_method' => $user->user_info?->payment_method ? 1 : 0,
+                'is_nutration' => $user->nutration ? 1 : 0,
 
                 ]
             ], 200);

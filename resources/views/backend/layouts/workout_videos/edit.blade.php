@@ -25,23 +25,7 @@
                                     @method('PUT')
 
                                     <!-- Video Relation -->
-                                    <div class="form-group mb-3">
-                                        <label for="video_id">Select Work-Out:</label>
-                                        <select name="video_id" id="video_id"
-                                            class="form-control @error('video_id') is-invalid @enderror">
-                                            <option value="">Select Work-Out</option>
-                                            @foreach ($videos as $video)
-                                                <option value="{{ $video->id }}"
-                                                    {{ old('video_id', $workoutVideo->video_id) == $video->id ? 'selected' : '' }}>
-                                                    {{ $video->title }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('video_id')
-                                            <span class="text-danger">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-
+                                
                                     <!-- Workout Video Title -->
                                     <div class="form-group mb-3">
                                         <label for="title">Workout Video Title:</label>

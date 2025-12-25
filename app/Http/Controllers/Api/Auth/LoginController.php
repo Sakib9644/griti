@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Validator;
 class LoginController extends Controller
 {
     public $select;
+
+
     public function __construct()
     {
         parent::__construct();
@@ -22,7 +24,7 @@ class LoginController extends Controller
 
     public function Login(Request $request)
     {
-        try {
+       try {
             $validator = Validator::make($request->all(), [
                 'email'    => 'required|email|exists:users,email',
                 'password' => 'required|string|min:6',
@@ -73,21 +75,46 @@ class LoginController extends Controller
                 'last_activity_at' => now(),
             ]);
 
-            //* Generate token if email is verified
             $token = auth('api')->login($user);
 
             $data = User::select($this->select)->find(auth('api')->user()->id);
+
+            $userInfo = $user->user_info;
+
+            if ($userInfo?->payment_status === 'trial') {
+
+                $trialStart = $userInfo->trial_start_at ?? $userInfo->created_at;
+                $trialDays = 3;
+                $trialUsedDays = $trialStart->diffInDays(now());
+
+                if ($trialUsedDays > $trialDays) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Your trial period has ended. Please subscribe to continue.',
+                        'needs_subscription' => true,
+                    ], 403);
+                }
+            }
+
+            if (in_array($userInfo?->payment_status, ['unpaid', 'expired'])) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Your subscription has expired. Please renew your subscription.',
+                    'needs_subscription' => true,
+                ], 403);
+            }
 
 
             $data = [
 
                 'id' => $data->id,
                 'avatar' => $data->avatar,
+                'name' => $data->name,
                 'email' => $data->email,
                 'user_info' => $data->user_info ? 1 : 0,
                 'Payment_method' => $data->user_info?->payment_method ? 1 : 0,
+                'nutration' => $data->nutration ? 1 : 0,
             ];
-
 
 
             return response()->json([
@@ -101,6 +128,7 @@ class LoginController extends Controller
             return Helper::jsonResponse(false, 'An error occurred during login.', 500, ['error' => $e->getMessage()]);
         }
     }
+
 
     public function refreshToken()
     {

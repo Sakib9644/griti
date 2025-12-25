@@ -56,6 +56,7 @@ use HasFactory, Notifiable, HasRoles,Billable;
 
 
 
+
     /**
      * Get the attributes that should be cast.
      *
@@ -66,6 +67,8 @@ use HasFactory, Notifiable, HasRoles,Billable;
         return [
             'otp_verified_at' => 'datetime',
             'password' => 'hashed',
+            // 'name' => 'boolean',
+
         ];
     }
 
@@ -145,9 +148,16 @@ use HasFactory, Notifiable, HasRoles,Billable;
         return $this->hasMany(Chat::class, 'receiver_id');
     }
 
+
+
+
     public function roomsAsUserOne()
     {
         return $this->hasMany(Room::class, 'user_one_id');
+    }
+     public function nutration(){
+
+        return $this->hasOne(Nutration::class);
     }
 
     public function roomsAsUserTwo()

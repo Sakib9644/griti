@@ -9,7 +9,7 @@
         <div class="side-header">
             <a class="header-brand1" href="{{ route('admin.dashboard') }}">
                 <img src="{{ asset(settings('logo') ?? 'default/logo.svg') }}" id="header-brand-logo" alt="logo"
-                    width="{{ settings('logo_width') ?? 100 }}" height="{{ settings('logo_height') ?? 100 }}">
+                    width="60" height="60">
             </a>
         </div>
         <ul class="side-menu mt-2">
@@ -51,6 +51,13 @@
                     <span class="side-menu__label">Themes</span>
                 </a>
             </li>
+              <li class="slide">
+                <a class="side-menu__item {{ request()->routeIs('admin.workout_videos.*') ? 'has-link active' : '' }}"
+                    href="{{ route('admin.workout_videos.index') }}">
+                    <i class="fa-solid fa-play-circle side-menu__icon"></i>
+                    <span class="side-menu__label">Work-Out Videos Library</span>
+                </a>
+            </li>
             <li class="slide">
                 <a class="side-menu__item {{ request()->routeIs('admin.videos.*') ? 'has-link active' : '' }}"
                     href="{{ route('admin.videos.index') }}">
@@ -58,13 +65,7 @@
                     <span class="side-menu__label">Work-Out List</span>
                 </a>
             </li>
-            <li class="slide">
-                <a class="side-menu__item {{ request()->routeIs('admin.workout_videos.*') ? 'has-link active' : '' }}"
-                    href="{{ route('admin.workout_videos.index') }}">
-                    <i class="fa-solid fa-play-circle side-menu__icon"></i>
-                    <span class="side-menu__label">Work-Out Videos</span>
-                </a>
-            </li>
+
 <li class="slide">
     <a class="side-menu__item {{ request()->routeIs('admin.music.*') ? 'has-link active' : '' }}"
        href="{{ route('admin.music.index', 0) }}">

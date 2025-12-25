@@ -15,14 +15,14 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('api')->name('api.')->group(function () {
 
     //stripe callback
-    Route::controller(StripeCallBackController::class)->prefix('payment/stripe')->name('payment.stripe.')->group(function () {
+ Route::controller(StripeCallBackController::class)->prefix('payment/stripe')->name('payment.stripe.')->group(function () {
         Route::post('/checkout', 'createIntent');
         Route::post('/app/checkout', 'createIntent2');
         Route::post('/app/trail', 'subscriptions');
         Route::post('/trail', 'subscribeWithTrial');
         Route::POST('/success', 'success')->name('success');
         Route::get('/cancel', 'failure')->name('cancel');
-        Route::get('/confirm-subscription', 'confirmSubscription')->name('confirmSubscription');
+        Route::post('/confirm-subscription', 'createSubscription')->name('confirmSubscription');
 
     });
 

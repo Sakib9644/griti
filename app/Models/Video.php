@@ -25,6 +25,10 @@ class Video extends Model
     {
         return $this->belongsTo(Theme::class);
     }
+    public function library()
+    {
+        return $this->hasMany(Videolibrary::class,'video_id');
+    }
 
 
 

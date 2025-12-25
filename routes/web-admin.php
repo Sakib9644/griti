@@ -107,6 +107,7 @@ Route::controller(VideoController::class)->prefix('Work-Out')->name('videos.')->
     Route::get('/show/{id}', 'show')->name('show');       // Show single video (optional)
     Route::get('/edit/{id}', 'edit')->name('edit');       // Show edit form
     Route::put('/update/{id}', 'update')->name('update'); // Update existing video
+    Route::get('/videos/assigned/{id}', 'assignedVideos')->name('assigned'); // Update existing video
     Route::delete('/delete/{id}', 'destroy')->name('destroy'); // Delete video
 });
 
@@ -431,10 +432,10 @@ Route::controller(WorkoutVideosController::class)->prefix('workout-videos')->nam
     Route::get('/', 'index')->name('index');                 // List all workout videos
     Route::get('/create', 'create')->name('create');         // Show create form
     Route::post('/store', 'store')->name('store');           // Store new workout video
-    Route::get('/show/{id}', 'show')->name('show');         // Show a specific workout video
-    Route::get('/edit/{id}', 'edit')->name('edit');         // Show edit form
-    Route::PUT('/update/{id}', 'update')->name('update');  // Update a workout video
-    Route::delete('/delete/{id}', 'destroy')->name('destroy'); // Delete a workout video
+    Route::get('/show/{id}', 'show')->name('show');         
+    Route::get('/edit/{id}', 'edit')->name('edit');
+    Route::PUT('/update/{id}', 'update')->name('update');
+    Route::delete('/delete/{id}', 'destroy')->name('destroy');
 
 });
 Route::controller(MusicController::class)->prefix('music')->name('music.')->group(function () {

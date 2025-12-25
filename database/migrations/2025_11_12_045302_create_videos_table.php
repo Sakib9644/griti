@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->foreignId('theme_id')->constrained()->onDelete('cascade');
             $table->string('title');
             $table->string('video');
-            $table->string('image')->nullable(); // thumbnail image path
+            $table->string('image')->nullable(); 
             $table->text('description')->nullable();
             $table->timestamps();
         });
