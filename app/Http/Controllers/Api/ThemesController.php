@@ -10,33 +10,28 @@ class ThemesController extends Controller
 {
     //
 
-    public function themes(Request $request)
-    {
+   public function themes(Request $request)
+{
+    $query = Theme::query()->where('status', 1); // Only active themes
 
-        $query = Theme::query();
-
-        if ($request->query('search')) {
-
-            $query->where('name', 'Like', "%" .$request->query('search')."%");
-        }
-
-        $theme = $query->get();
-
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Theme retrive Sucessfully',
-            'data' => $theme->map(function ($t) {
-
-         return [
-                   'id' => $t->id,
-                   'name' => $t->name,
-                   'image' => $t->image ? url($t->image) : null,
-                   'work_out' => $t->videos->count(),
-         ];
-
-
-            })
-        ]);
+    if ($request->query('search')) {
+        $query->where('name', 'like', "%" . $request->query('search') . "%");
     }
+
+    $themes = $query->get();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Themes retrieved successfully',
+        'data' => $themes->map(function ($t) {
+            return [
+                'id' => $t->id,
+                'name' => $t->name,
+                'image' => $t->image ? url($t->image) : null,
+                'work_out' => $t->videos->count(),
+            ];
+        })
+    ]);
+}
+
 }

@@ -41,7 +41,8 @@ use HasFactory, Notifiable, HasRoles,Billable;
         'otp',
         'otp_expires_at',
         'last_activity_at',
-        'slug'
+        'slug',
+        'avatar'
     ];
 
     /**

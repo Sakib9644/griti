@@ -1,7 +1,7 @@
 @extends('backend.app', ['title' => 'Category'])
 
 @push('styles')
-<link href="{{ asset('default/datatable.css') }}" rel="stylesheet" />  
+<link href="{{ asset('default/datatable.css') }}" rel="stylesheet" />
 @endpush
 
 
@@ -46,7 +46,7 @@
                                             <th class="bg-transparent border-bottom-0 wp-15">SN</th>
                                             <th class="bg-transparent border-bottom-0 wp-15">Name</th>
                                             <th class="bg-transparent border-bottom-0">Image</th>
-                                            <th class="bg-transparent border-bottom-0">Status</th>
+                                            <th class="bg-transparent border-bottom-0">Show Category to user</th>
                                             <th class="bg-transparent border-bottom-0">Action</th>
                                         </tr>
                                     </thead>
@@ -209,7 +209,7 @@
             },
             success: function(resp) {
                 NProgress.done();
-                toastr.success(resp.message);
+                toastr.success('Category Status Changed Sucessfully');
                 $('#datatable').DataTable().ajax.reload();
             },
             error: function(error) {

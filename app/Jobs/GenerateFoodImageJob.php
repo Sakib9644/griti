@@ -6,7 +6,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Http;
 
-class GenerateImageJob implements ShouldQueue
+class  implements ShouldQueue
 {
     use Queueable;
 

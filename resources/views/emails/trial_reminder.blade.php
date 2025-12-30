@@ -31,8 +31,6 @@
 
         <p>To continue enjoying our services without interruption, please pay for your Stripe plan.</p>
 
-
-
         <p>Thanks,<br>{{ config('app.name') }}</p>
     </div>
 </body>

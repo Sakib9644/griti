@@ -107,12 +107,15 @@ Route::group(['middleware' => 'guest:api'], function ($router) {
 
 Route::group(['middleware' => ['auth:api', 'api-otp']], function ($router) {
     Route::get('/refresh-token', [LoginController::class, 'refreshToken']);
+    Route::get('/get_height_weight', [UserController::class, 'get_height_weight']);
     Route::post('/logout', [LogoutController::class, 'logout']);
     Route::get('/me', [UserController::class, 'me']);
     Route::get('/account/switch', [UserController::class, 'accountSwitch']);
     Route::post('/update-profile', [UserController::class, 'updateProfile']);
     Route::post('/update-avatar', [UserController::class, 'updateAvatar']);
     Route::delete('/delete-profile', [UserController::class, 'destroy']);
+    Route::post('/height_weight/update', [UserController::class, 'height_weight']);
+    Route::post('/password/update', [UserController::class, 'updatepass']);
 });
 
 /*

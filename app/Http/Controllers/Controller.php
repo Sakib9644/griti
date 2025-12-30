@@ -13,19 +13,22 @@ abstract class Controller
             $locale = 'en';
             Session::put('locale', $locale);
             App::setLocale($locale);
-        }        
+        }
 
         if (!Session::has('timezone')) {
             Session::put('timezone', 'UTC');
         }
 
         if (auth('web')->check()) {
-            auth('web')->user()->update(['last_activity_at' => now()]);
+            auth('web')->user()->update([
+                'last_activity_at' => now()
+            ]);
         }
 
         if (auth('api')->check()) {
-            auth('api')->user()->update(['last_activity_at' => now()]);
+            auth('api')->user()->update(
+                ['last_activity_at' => now()]);
         }
-        
+
     }
 }

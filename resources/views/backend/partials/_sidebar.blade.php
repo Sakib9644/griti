@@ -51,7 +51,7 @@
                     <span class="side-menu__label">Themes</span>
                 </a>
             </li>
-              <li class="slide">
+            <li class="slide">
                 <a class="side-menu__item {{ request()->routeIs('admin.workout_videos.*') ? 'has-link active' : '' }}"
                     href="{{ route('admin.workout_videos.index') }}">
                     <i class="fa-solid fa-play-circle side-menu__icon"></i>
@@ -66,13 +66,20 @@
                 </a>
             </li>
 
-<li class="slide">
-    <a class="side-menu__item {{ request()->routeIs('admin.music.*') ? 'has-link active' : '' }}"
-       href="{{ route('admin.music.index', 0) }}">
-        <i class="fa-solid fa-music side-menu__icon"></i>
-        <span class="side-menu__label">Music</span>
-    </a>
-</li>
+            <li class="slide">
+                <a class="side-menu__item {{ request()->routeIs('admin.music.*') ? 'has-link active' : '' }}"
+                    href="{{ route('admin.music.index', 0) }}">
+                    <i class="fa-solid fa-music side-menu__icon"></i>
+                    <span class="side-menu__label">Music</span>
+                </a>
+            </li>
+            <li class="slide">
+                <a class="side-menu__item {{ request()->routeIs('admin.motivational-quotes.*') ? 'has-link active' : '' }}"
+                    href="{{ route('admin.motivational-quotes.index') }}">
+                    <i class="fa-solid fa-quote-left side-menu__icon"></i>
+                    <span class="side-menu__label">Motivational Quotes</span>
+                </a>
+            </li>
 
 
             <li class="slide">

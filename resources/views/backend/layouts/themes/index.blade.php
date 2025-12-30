@@ -25,7 +25,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @if(session('success'))
+                    @if (session('success'))
                         <div class="alert alert-success">{{ session('success') }}</div>
                     @endif
 
@@ -35,11 +35,16 @@
                                 <th>SN</th>
                                 <th>Name</th>
                                 <th>Image</th>
+                                <th>Show Theme to user</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($themes as $key => $theme)
+                            @php
+                                $backgroundColor = $theme->status == 1 ? '#4CAF50' : '#ccc';
+                                $sliderTranslateX = $theme->status == 1 ? '26px' : '2px';
+                            @endphp
                             <tr>
                                 <td>{{ $key + 1 }}</td>
                                 <td>{{ $theme->name }}</td>
@@ -51,8 +56,24 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <a href="{{ route('admin.theme.edit', $theme->id) }}" class="btn btn-sm btn-info">Edit</a>
+                                    <div class="d-flex justify-content-center align-items-center">
+                                        <div class="form-check form-switch"
+                                            style="position: relative; width: 50px; height: 24px; background-color: {{ $backgroundColor }}; border-radius: 12px; transition: background-color 0.3s ease; cursor: pointer;">
 
+                                            <input type="checkbox"
+                                                   class="form-check-input theme-status-toggle"
+                                                   id="customSwitch{{ $theme->id }}"
+                                                   data-id="{{ $theme->id }}"
+                                                   name="status"
+                                                   {{ $theme->status == 1 ? 'checked' : '' }}
+                                                   style="position: absolute; width: 100%; height: 100%; opacity: 0; z-index: 2; cursor: pointer;">
+
+                                            <span style="position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background-color: white; border-radius: 50%; transition: transform 0.3s ease; transform: translateX({{ $sliderTranslateX }});"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="{{ route('admin.theme.edit', $theme->id) }}" class="btn btn-sm btn-info">Edit</a>
                                     <form action="{{ route('admin.theme.destroy', $theme->id) }}" method="POST" style="display:inline-block;">
                                         @csrf
                                         @method('DELETE')
@@ -62,15 +83,90 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center">No themes found.</td>
+                                <td colspan="5" class="text-center">No themes found.</td>
                             </tr>
                             @endforelse
                         </tbody>
                     </table>
+
                 </div>
             </div>
 
         </div>
     </div>
 </div>
+<script>
+function showStatusChangeAlert(toggle) {
+    let themeId = toggle.dataset.id;
+    let newStatus = toggle.checked ? 1 : 0; // desired status
+
+    // Show confirmation before changing
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'You want to update the status?',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'No',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Proceed with status update
+            statusChange(toggle, themeId, newStatus);
+        } else {
+            // Revert toggle if cancelled
+            toggle.checked = !toggle.checked;
+        }
+    });
+}
+
+function statusChange(toggle, themeId, status) {
+    let parentDiv = toggle.parentElement;
+    let span = parentDiv.querySelector('span');
+
+    // Update slider immediately
+    parentDiv.style.backgroundColor = status ? '#4CAF50' : '#ccc';
+    span.style.transform = status ? 'translateX(26px)' : 'translateX(2px)';
+
+    // AJAX request to backend
+    fetch('/admin/theme/status/' + themeId, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: status })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success){
+            toastr.success('Theme status updated successfully');
+            if(typeof $('#datatable').DataTable === 'function') {
+                $('#datatable').DataTable().ajax.reload();
+            }
+        } else {
+            toastr.error('Failed to update status');
+            // Revert toggle and slider
+            toggle.checked = !toggle.checked;
+            parentDiv.style.backgroundColor = toggle.checked ? '#4CAF50' : '#ccc';
+            span.style.transform = toggle.checked ? 'translateX(26px)' : 'translateX(2px)';
+        }
+    })
+    .catch(() => {
+        toastr.error('Error updating status');
+        // Revert toggle and slider
+        toggle.checked = !toggle.checked;
+        parentDiv.style.backgroundColor = toggle.checked ? '#4CAF50' : '#ccc';
+        span.style.transform = toggle.checked ? 'translateX(26px)' : 'translateX(2px)';
+    });
+}
+
+// Attach confirmation to all toggles
+document.querySelectorAll('.theme-status-toggle').forEach(function(toggle) {
+    toggle.addEventListener('change', function(e) {
+        e.preventDefault(); // prevent immediate change
+        showStatusChangeAlert(toggle);
+    });
+});
+</script>
+
 @endsection

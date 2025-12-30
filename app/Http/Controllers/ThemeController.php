@@ -41,6 +41,7 @@ class ThemeController extends Controller
         $theme->name = $request->name;
         $theme->category_id = $request->category_id ?? Category::first()->id;
         $theme->type = $request->type ?? 'advance';
+        $theme->status = 1;
 
         if ($request->hasFile('image')) {
             $theme->image = Helper::fileUpload(
@@ -68,44 +69,50 @@ class ThemeController extends Controller
     /**
      * Update the specified theme in storage.
      */
-   public function update(Request $request, $id)
-{
-    $request->validate([
-        'name'        => 'nullable|string|max:255',
-        'image'       => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'name'        => 'nullable|string|max:255',
+            'image'       => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
 
-    ]);
+        ]);
 
-    try {
-        $theme = Theme::findOrFail($id);
-        $theme->name = $request->name;
-        $theme->category_id = $request->category_id;
-        $theme->type = $request->type;
+        try {
+            $theme = Theme::findOrFail($id);
+            $theme->name = $request->name;
+            $theme->category_id = $request->category_id ?? Category::first()->id;
+            $theme->type = $request->type ??  $theme->type;
+            $theme->status = $theme->status;
 
-        if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($theme->image && file_exists(public_path($theme->image))) {
-                Helper::fileDelete(public_path($theme->image));
+            if ($request->hasFile('image')) {
+                if ($theme->image && file_exists(public_path($theme->image))) {
+                    Helper::fileDelete(public_path($theme->image));
+                }
+
+                $theme->image = Helper::fileUpload(
+                    $request->file('image'),
+                    'themes',
+                    time() . '_' . $request->file('image')->getClientOriginalName()
+                );
             }
 
-            $theme->image = Helper::fileUpload(
-                $request->file('image'),
-                'themes',
-                time() . '_' . $request->file('image')->getClientOriginalName()
-            );
-        }
+            $theme->save();
 
+            return redirect()->route('admin.theme.index')->with('t-success', 'Theme updated successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Theme update failed: ' . $e->getMessage());
+
+            return redirect()->back()->with('t-error', 'Something went wrong while updating the theme.'. $e->getMessage());
+        }
+    }
+    public function updateStatus(Request $request, $id)
+    {
+        $theme = Theme::findOrFail($id);
+        $theme->status = $request->status; 
         $theme->save();
 
-        return redirect()->route('admin.theme.index')->with('t-success', 'Theme updated successfully!');
-    } catch (\Exception $e) {
-        // Log the error for debugging
-        \Log::error('Theme update failed: '.$e->getMessage());
-
-        // Redirect back with an error message
-        return redirect()->back()->with('t-error', 'Something went wrong while updating the theme.');
+        return response()->json(['success' => true]);
     }
-}
 
     /**
      * Remove the specified theme from storage.

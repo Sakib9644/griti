@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\CircleController;
+use App\Http\Controllers\MotivationalQuoteController;
+use App\Http\Controllers\MotivationalQuouteController;
 use App\Http\Controllers\MusicController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\VideoController;
@@ -66,7 +68,14 @@ Route::controller(MenuController::class)->prefix('menu')->name('menu.')->group(f
     Route::get('/delete/{id}', 'destroy')->name('destroy');
     Route::get('/status/{id}', 'status')->name('status');
 });
-
+Route::controller(MotivationalQuouteController::class)->prefix('motivational-quotes')->name('motivational-quotes.')->group(function () {
+    Route::get('/', 'index')->name('index');                  // List / DataTable AJAX
+    Route::post('/store', 'store')->name('store');            // Store new quote
+    Route::get('/edit/{id}', 'edit')->name('edit');           // Get quote data for edit modal
+    Route::put('/update/{id}', 'update')->name('update');     // Update quote
+    Route::delete('/destroy/{id}', 'destroy')->name('destroy'); // Delete quote
+    Route::get('/toggle-status/{id}', 'toggleStatus')->name('toggle-status'); // Toggle status
+});
 Route::controller(TemplateEmailController::class)->prefix('template/email')->name('template.email.')->group(function () {
     Route::get('/', 'index')->name('index');
     Route::get('/create', 'create')->name('create');
@@ -97,9 +106,11 @@ Route::controller(ThemeController::class)->prefix('theme')->name('theme.')->grou
     Route::get('/edit/{id}', 'edit')->name('edit');
     Route::post('/update/{id}', 'update')->name('update');
     Route::delete('/delete/{id}', 'destroy')->name('destroy');
-    // Optional: if you have status toggle
-    // Route::get('/status/{id}', 'status')->name('status');
+
+    // Status toggle route (POST)
+    Route::post('/status/{id}', 'updateStatus')->name('status');
 });
+
 Route::controller(VideoController::class)->prefix('Work-Out')->name('videos.')->group(function () {
     Route::get('/', 'index')->name('index');               // List all videos
     Route::get('/create', 'create')->name('create');       // Show create form
@@ -432,7 +443,7 @@ Route::controller(WorkoutVideosController::class)->prefix('workout-videos')->nam
     Route::get('/', 'index')->name('index');                 // List all workout videos
     Route::get('/create', 'create')->name('create');         // Show create form
     Route::post('/store', 'store')->name('store');           // Store new workout video
-    Route::get('/show/{id}', 'show')->name('show');         
+    Route::get('/show/{id}', 'show')->name('show');
     Route::get('/edit/{id}', 'edit')->name('edit');
     Route::PUT('/update/{id}', 'update')->name('update');
     Route::delete('/delete/{id}', 'destroy')->name('destroy');
