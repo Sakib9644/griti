@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Auth\SocialLoginController;
+use App\Http\Controllers\MusicController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Web\Backend\Access\UserController;
 use App\Http\Controllers\Web\Backend\PlanController;
@@ -24,6 +25,7 @@ Route::get('social-login/{provider}',[SocialLoginController::class,'RedirectToPr
 Route::get('social-login/{provider}/callback',[SocialLoginController::class, 'HandleProviderCallback']);
 
 Route::post('subscriber/store',[SubscriberController::class, 'store'])->name('subscriber.data.store');
+Route::post('/admin/music/{id}/default', [MusicController::class, 'setDefault'])->name('admin.music.default');
 
 Route::post('contact/store',[ContactController::class, 'store'])->name('contact.store');
 

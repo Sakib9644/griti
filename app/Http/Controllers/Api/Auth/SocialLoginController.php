@@ -17,7 +17,7 @@ class SocialLoginController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->select = ['id', 'name', 'email', 'avatar'];   
+        $this->select = ['id', 'name', 'email', 'avatar'];
     }
 
     public function RedirectToProvider($provider)
@@ -65,7 +65,7 @@ class SocialLoginController extends Controller
                         'status'            => $status ?? 'active',
                         'otp_verified_at' => now(),
                     ]);
-                    $user->assignRole($request->input('role'));
+                    $user->assignRole($request->input('user'));
                     $isNewUser = true;
                     //notify to admin start
                     /* $admins = User::where('role', 'admin')->get();

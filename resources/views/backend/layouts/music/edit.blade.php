@@ -23,12 +23,7 @@
                                 @method('PUT')
 
                                 <!-- Workout Video Relation (readonly or dropdown if needed) -->
-                                <div class="form-group mb-3">
-                                    <label for="workout_videos_id">Workout Video:</label>
-                                    <select name="workout_videos_id" id="workout_videos_id" class="form-control" disabled>
-                                        <option value="{{ $music->workout_videos_id }}">{{ $music->workoutVideo->title ?? 'N/A' }}</option>
-                                    </select>
-                                </div>
+
 
                                 <!-- Music Title -->
                                 <div class="form-group mb-3">

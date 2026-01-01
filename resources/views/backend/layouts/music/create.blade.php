@@ -21,22 +21,6 @@
                             <form method="POST" action="{{ route('admin.music.store') }}" enctype="multipart/form-data">
                                 @csrf
 
-                                <!-- Workout Video Relation -->
-                                <div class="form-group mb-3">
-                                    <label for="workout_videos_id">Select Workout Video:</label>
-                                    <select name="workout_videos_id" id="workout_videos_id" class="form-control @error('workout_videos_id') is-invalid @enderror">
-                                        <option value="">Select Workout Video</option>
-                                        @foreach($workoutVideos ?? [] as $workout)
-                                            <option value="{{ $workout->id }}" {{ old('workout_videos_id') == $workout->id ? 'selected' : '' }}>
-                                                {{ $workout->title }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('workout_videos_id')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-
                                 <!-- Music Title -->
                                 <div class="form-group mb-3">
                                     <label for="title">Music Title (Optional):</label>
@@ -58,7 +42,7 @@
                                 <!-- Music File Upload -->
                                 <div class="form-group mb-3">
                                     <label for="music_file">Upload Music File:</label>
-                                    <input type="file" name="music_file" class="dropify form-control">
+                                    <input type="file" name="music_file" class="dropify form-control" accept="audio/mpeg">
                                     @error('music_file')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror

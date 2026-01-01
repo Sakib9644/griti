@@ -20,8 +20,7 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Quote</th>
-                                    <th>Status for Quotes
-                                    </th>
+                                    <th>Status for Quotes</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>

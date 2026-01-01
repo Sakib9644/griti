@@ -47,7 +47,7 @@ class categoryController extends Controller
 
     public function categoryWiseWorkouts($categoryId)
     {
-        $videos = Video::select('id', 'title', 'image', 'calories', 'minutes')->where('category_id', $categoryId)->get();
+        $videos = Video::select('id', 'title', 'image', 'calories', 'minutes','type')->where('category_id', $categoryId)->get();
 
         return response()->json([
             'success' => true,
@@ -62,7 +62,7 @@ class categoryController extends Controller
     // 2. Theme-wise workouts
     public function themeWiseWorkouts($themeId)
     {
-        $videos = Video::select('id', 'title', 'image', 'calories', 'minutes')->where('theme_id', $themeId)->get();
+        $videos = Video::select('id', 'title', 'image', 'calories', 'minutes','type')->where('theme_id', $themeId)->get();
 
         return response()->json([
             'success' => true,
@@ -86,7 +86,7 @@ class categoryController extends Controller
             ]);
         }
 
-        $videos = Video::select('id', 'title', 'image', 'calories', 'minutes')
+        $videos = Video::select('id', 'title', 'image', 'calories', 'minutes','type')
             ->where('type', $levelId)
             ->get();
 

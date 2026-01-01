@@ -44,14 +44,12 @@ class MusicController extends Controller
     {
         try {
             $request->validate([
-                'workout_videos_id' => 'required|exists:workout_videos,id',
                 'title' => 'nullable|string|max:255',
                 'duration' => 'nullable|string|max:50',
                 'music_file' => 'required|file|mimes:mp3,wav,ogg|max:50240',
             ]);
 
             $music = new Music();
-            $music->workout_videos_id = $request->workout_videos_id;
             $music->title = $request->title;
             $music->duration = $request->duration;
 
@@ -143,4 +141,23 @@ class MusicController extends Controller
             return redirect()->route('admin.music.index')->with('t-error', 'Failed to delete music: ' . $e->getMessage());
         }
     }
+
+    public function setDefault($id)
+{
+    try {
+        // 1️⃣ Reset previous default
+        Music::where('is_default', true)->update(['is_default' => false]);
+
+        // 2️⃣ Set new default
+        $music = Music::findOrFail($id);
+        $music->is_default = true;
+        $music->save();
+
+        return redirect()->route('admin.music.index')
+                         ->with('t-success', "Music '{$music->title}' set as default successfully!");
+    } catch (\Exception $e) {
+        return redirect()->route('admin.music.index')
+                         ->with('t-error', 'Failed to set default music: ' . $e->getMessage());
+    }
+}
 }

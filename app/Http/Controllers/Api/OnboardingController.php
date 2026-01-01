@@ -81,7 +81,7 @@ class OnboardingController extends Controller
         );
 
         $data = [
-            'age' => $userInfo->age,
+            'age' => (string) $userInfo->age,
             'bmi' => $userInfo->bmi,
             'body_part_focus' => $userInfo->body_part_focus,
             'body_satisfaction' => $userInfo->body_satisfaction,
