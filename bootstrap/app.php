@@ -49,7 +49,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withSchedule(function (Schedule $schedule) {
         // $schedule->command('app:send-emails')->everySecond();
-          $schedule->command('app:subscription')->daily();
+        $schedule->command('app:subscription')->daily();
+        $schedule->command('app:motivation-quote')->everyFiveSeconds();
     })
 
     ->withMiddleware(function (Middleware $middleware) {

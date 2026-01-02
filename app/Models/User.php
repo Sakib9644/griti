@@ -105,6 +105,10 @@ use HasFactory, Notifiable, HasRoles,Billable;
     {
         return  $this->getRoleNames()->first();
     }
+    public function music()
+    {
+        return $this->belongsTo(Music::class);
+    }
 
     public function firebaseTokens()
     {

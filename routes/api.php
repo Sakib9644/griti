@@ -43,6 +43,9 @@ Route::middleware(['auth:api', 'is_trail'])->group(function () {
     Route::get('/trainingLevelWiseWorkouts', [categoryController::class, 'trainingLevelWiseWorkouts']);
     Route::get('/workoutWiseVideos/{id}', [categoryController::class, 'workoutWiseVideos']);
     Route::post('/active_workouts/save', [categoryController::class, 'active_workouts']);
+    Route::post('/music/save', [UserController::class, 'assignmusic']);
+    Route::get('/music/list', [UserController::class, 'music']);
+    Route::get('/user/music', [UserController::class, 'user_music']);
     Route::get('/work_out_list', [categoryController::class, 'work_out_list']);
     Route::get('/themes', [ThemesController::class, 'themes']);
 });

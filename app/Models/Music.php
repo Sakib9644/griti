@@ -8,6 +8,8 @@ class Music extends Model
 {
     //
 
+    protected $guarded = [];
+
      public function workoutlist()
     {
         return $this->belongsTo(WorkoutVideos::class, 'workout_videos_id');

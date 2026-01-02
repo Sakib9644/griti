@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Helpers\Helper;
 use App\Models\FirebaseTokens;
 use Exception;
+use Symfony\Component\HttpFoundation\Request;
 
 class LogoutController extends Controller
 {
@@ -14,25 +15,29 @@ class LogoutController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->select = ['id', 'name', 'email', 'avatar'];   
+        $this->select = ['id', 'name', 'email', 'avatar'];
     }
-    public function logout()
+    public function logout(Request $request)
     {
         try {
-            if (Auth::check('api')) {
+            $request->validate([
 
-                $firebaseTokens = FirebaseTokens::where('user_id', Auth::guard('api')->id())->get();
-                if ($firebaseTokens) {
-                    $firebaseTokens->each->delete();
-                }
-
-                Auth::logout('api');
-                
-                return Helper::jsonResponse(true, 'Logged out successfully. Token revoked.', 200);
-            } else {
-                return Helper::jsonErrorResponse( 'User not authenticated', 401);
+                'device_id' =>'required|exists:firebase_tokens,device_id'
+            ]);
+            if (!Auth::guard('api')->check()) {
+                return Helper::jsonErrorResponse('User not authenticated', 401);
             }
-        } catch (Exception $e) {
+
+           $dl = FirebaseTokens::where('user_id', Auth::guard('api')->id())
+                ->where('device_id', $request->device_id)
+                ->delete();
+
+
+
+            Auth::guard('api')->logout();
+
+            return Helper::jsonResponse(true, 'Logged out successfully. Token revoked.', 200);
+        } catch (\Exception $e) {
             return Helper::jsonErrorResponse($e->getMessage(), 500);
         }
     }

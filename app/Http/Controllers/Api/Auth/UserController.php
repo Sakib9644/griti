@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
+use App\Models\Music;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -214,5 +215,39 @@ class UserController extends Controller
         ];
 
         return Helper::jsonResponse(true, 'User Info Retrive successfully', 200, $data);
+    }
+
+    public function music()
+    {
+
+        $music = Music::select('id', 'music_file', 'title', 'duration')->get();
+
+        return Helper::jsonResponse(true, 'Music retrive successfully', 200, $music);
+    }
+
+    public function user_music()
+    {
+
+        $user = auth('api')->user();
+        if ($user->music) {
+            $data = $user->music()->select('id', 'music_file', 'title', 'duration')->get();
+
+            return Helper::jsonResponse(true, 'Music retrive successfully', 200, $data);
+        } else {
+            $data = Music::where('is_default', 1)->select('id', 'music_file', 'title', 'duration')->get();
+            return Helper::jsonResponse(true, 'Music retrive successfully', 200, $data);
+        }
+    }
+
+    public function assignmusic(Request $request)
+    {
+
+        $user = auth('api')->user();
+
+        $user->music_id = $request->music_id;
+
+        $user->save();
+
+        return Helper::jsonResponse(true, 'Music Updated successfully', 200);
     }
 }

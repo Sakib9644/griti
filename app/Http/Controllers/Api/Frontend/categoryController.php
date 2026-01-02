@@ -109,7 +109,6 @@ public function workoutWiseVideos($workoutId)
     // Map videos to include workoutVideo and music
     $videoData = $videos->flatMap(function ($v) {
         return $v->workoutVideo()
-                 ->with(['music:id,workout_videos_id,music_file,title,duration'])
                  ->select('id', 'title', 'thumbnail', 'seconds', 'descriptions', 'videos')
                  ->get();
     });
