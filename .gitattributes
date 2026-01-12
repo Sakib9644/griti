@@ -1,0 +1,13 @@
+<<<<<<< HEAD
+* text=auto eol=lf
+*.blade.php diff=html
+*.css diff=css
+*.html diff=html
+*.md diff=markdown
+*.php diff=php
+/.github export-ignore
+CHANGELOG.md export-ignore
+.styleci.yml export-ignore
+=======
+>>>>>>> dd82cd2ad04ee264c918110da89dcc8aca026c8c
+*.rar filter=lfs diff=lfs merge=lfs -text

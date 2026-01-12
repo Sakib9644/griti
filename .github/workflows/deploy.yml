@@ -1,0 +1,22 @@
+name: Deploy project to our server
+on:
+  push:
+    branches:
+      - main
+jobs:
+  FTP-Deploy-Action:
+    name: FTP-Deploy-Action
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.1.0
+        with:
+          fetch-depth: 2
+      - name: FTP-Deploy-Action
+        uses: SamKirkland/FTP-Deploy-Action@4.3.0
+        with:
+          server: 13.62.130.228
+          username: griti
+          password: "sZsLAvimz1hLzTKFOp0S"
+          # server: 146.63.205.92.host.secureserver.net
+          # username: dolceresetapp@backend.dolceresetapp.online
+          # password: "5OipIT=Iq5oWVg0q"
