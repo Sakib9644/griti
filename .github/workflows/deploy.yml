@@ -17,4 +17,6 @@ jobs:
           server: 13.62.130.228
           username: griti
           password: "sZsLAvimz1hLzTKFOp0S"
-         
+            local-dir: public/
+            server-dir: public_html/
+
