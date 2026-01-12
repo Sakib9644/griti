@@ -29,8 +29,6 @@ return new class extends Migration
             $table->decimal('price', 10, 2); // store payment amount
             $table->timestamps();
 
-            // Optional: add foreign key constraint if you have users table
-            // $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
