@@ -30,6 +30,8 @@ class LoginController extends Controller
                 'password' => 'required|string|min:6',
             ]);
 
+            \Log::info($request->all());
+
             if ($validator->fails()) {
                 return Helper::jsonResponse(
                     false,

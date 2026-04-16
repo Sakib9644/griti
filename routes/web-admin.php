@@ -441,7 +441,7 @@ Route::controller(CountryController::class)->prefix('country')->name('country.')
 
 Route::controller(WorkoutVideosController::class)->prefix('workout-videos')->name('workout_videos.')->group(function () {
     Route::get('/', 'index')->name('index');                 // List all workout videos
-    Route::get('/create', 'create')->name('create');         // Show create form
+    Route::get('/create', 'create')->name('create');         
     Route::post('/store', 'store')->name('store');           // Store new workout video
     Route::get('/show/{id}', 'show')->name('show');
     Route::get('/edit/{id}', 'edit')->name('edit');

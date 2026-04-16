@@ -21,6 +21,6 @@ class StripeService
 
     public function failure($paymentIntent): void
     {
-        //? Handle payment failure    
+        //? Handle payment failure
     }
 }

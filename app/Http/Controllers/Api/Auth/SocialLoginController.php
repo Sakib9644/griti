@@ -39,8 +39,10 @@ class SocialLoginController extends Controller
         'provider' => 'required|in:google,facebook,apple',
     ]);
 
+
     try {
         $provider = $request->provider;
+
 
         // Get social user from token
         $socialUser = Socialite::driver($provider)->stateless()->userFromToken($request->token);
@@ -69,7 +71,7 @@ class SocialLoginController extends Controller
             $password = Str::random(16);
 
             // Handle Apple name fallback
-            $name = $socialUser->getName() ?? "User_" . Str::random(8);
+            $name =  $request->name ?? $socialUser->getName() ?? 'Apple User';
 
             $user = User::create([
                 'name'              => $name,
@@ -101,6 +103,7 @@ class SocialLoginController extends Controller
 
         // Login user and generate API token
         Auth::login($user);
+
         $token = auth('api')->login($user);
 
         // Prepare response data

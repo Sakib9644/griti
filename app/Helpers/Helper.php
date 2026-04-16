@@ -192,6 +192,7 @@ class Helper
                   Str::limit($notifyData['body'], 100),
                   $notifyData['icon']
               );
+              
 
               $message = CloudMessage::withTarget('token', $token)
                   ->withNotification($notification);
